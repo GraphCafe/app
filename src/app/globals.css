@@ -17,9 +17,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-sans: var(--font-commissioner);
+  --font-heading: var(--font-crimson);
+  --font-mono: var(--font-inconsolata);
   --color-chart-8: var(--chart-8);
   --color-chart-7: var(--chart-7);
   --color-chart-6: var(--chart-6);
@@ -208,5 +208,17 @@
   }
   html {
     @apply font-sans;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-heading font-medium;
+  }
+  code,
+  pre,
+  kbd {
+    @apply font-mono;
+    font-size: 1.1em;
   }
 }

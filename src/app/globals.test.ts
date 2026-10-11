@@ -61,3 +61,22 @@ describe("design tokens", () => {
     expect(css).not.toMatch(/oklch\(0\.\d+ 0 0\)/);
   });
 });
+
+describe("typography", () => {
+  const layout = readFileSync(join(__dirname, "layout.tsx"), "utf8");
+
+  it("maps Tailwind font utilities to the brand fonts", () => {
+    expect(block(css, /^@theme inline\s*\{/)).toMatchObject({
+      "--font-sans": "var(--font-commissioner)",
+      "--font-heading": "var(--font-crimson)",
+      "--font-mono": "var(--font-inconsolata)",
+    });
+  });
+
+  it("loads Crimson Pro, Commissioner, and Inconsolata instead of Fraunces and Nunito", () => {
+    expect(layout).toMatch(/Crimson_Pro/);
+    expect(layout).toMatch(/Commissioner/);
+    expect(layout).toMatch(/Inconsolata/);
+    expect(layout).not.toMatch(/Fraunces|Nunito/);
+  });
+});

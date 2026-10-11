@@ -1,33 +1,39 @@
 import type { Metadata } from "next";
-import { Fraunces, Nunito } from "next/font/google";
+import { Commissioner, Crimson_Pro, Inconsolata } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+const crimson = Crimson_Pro({
+  variable: "--font-crimson",
   subsets: ["latin"],
   display: "swap",
 });
 
-const nunito = Nunito({
-  variable: "--font-nunito",
+const commissioner = Commissioner({
+  variable: "--font-commissioner",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const inconsolata = Inconsolata({
+  variable: "--font-inconsolata",
   subsets: ["latin"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Graph.Cafe — BYO APIs, served warm",
+  title: "Graph.Cafe",
   description:
-    "Connect any HTTP API, explore JSON as tables, and build small reports with café-flavored UX.",
+    "Connect any HTTP API, explore the JSON as a table, and save a chart your team can read.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${fraunces.variable} ${nunito.variable} h-full antialiased`}
+      className={`${crimson.variable} ${commissioner.variable} ${inconsolata.variable} h-full antialiased`}
     >
-      <body className="min-h-full font-[family-name:var(--font-nunito)] text-[var(--cafe-espresso)]">
+      <body className="min-h-full">
         <TooltipProvider>{children}</TooltipProvider>
       </body>
     </html>
