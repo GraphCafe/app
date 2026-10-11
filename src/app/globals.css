@@ -102,17 +102,6 @@
   --logo-shadow-2: rgb(50 43 40 / 0.07);
   --shadow-popover: 0 8px 24px rgb(50 43 40 / 0.1), 0 2px 6px rgb(50 43 40 / 0.06);
   --radius: 0.625rem;
-
-  /* Legacy café palette, aliased to the new tokens until the sweep removes it. */
-  --cafe-walnut: var(--foreground);
-  --cafe-espresso: var(--foreground);
-  --cafe-mocha: var(--muted-foreground);
-  --cafe-caramel: var(--muted-foreground);
-  --cafe-latte: var(--border);
-  --cafe-cream: var(--surface-sunken);
-  --cafe-menu: var(--surface-sunken);
-  --cafe-canvas: var(--surface-sunken);
-  --cafe-foam: var(--background);
 }
 
 .dark {
@@ -226,7 +215,7 @@
   }
 }
 
-/* Faint pencil hairline under table rows (spec �5). */
+/* Faint pencil hairline under table rows (spec §5). */
 .pencil-rule {
   position: relative;
 }

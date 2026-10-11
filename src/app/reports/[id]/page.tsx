@@ -13,7 +13,7 @@ export default async function ReportPage({ params }: Props) {
     <CafeShell title="Report Studio" subtitle="Saved widgets on your data plate.">
       <Suspense
         fallback={
-          <div className="flex items-center gap-2 text-sm text-[var(--cafe-mocha)]">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="size-4 animate-spin" />
             Loading…
           </div>

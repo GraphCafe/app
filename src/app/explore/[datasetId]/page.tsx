@@ -13,7 +13,7 @@ export default async function ExplorePage({ params }: Props) {
     <CafeShell title="Explore" subtitle="Execute the roast and preview JSON + table.">
       <Suspense
         fallback={
-          <div className="flex items-center gap-2 text-sm text-[var(--cafe-mocha)]">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="size-4 animate-spin" />
             Loading…
           </div>

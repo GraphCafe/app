@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { GraphCafeMark } from "@/components/brand/graph-cafe-mark";
 import { CafeShell } from "@/components/cafe/cafe-shell";
 import { DatasetRoastForm } from "@/components/cafe/dataset-roast-form";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -35,10 +36,11 @@ export default function ConnectionsPage() {
       subtitle="Bring your own API — secrets stay on the server."
     >
       <div className="mb-4 flex flex-wrap gap-2">
-        <Link href="/connections/new" className={cn(buttonVariants())}>
-          <Plus className="size-4" />
-          New pour
-        </Link>
+        {connections.length > 0 ? (
+          <Link href="/connections/new" className={cn(buttonVariants())}>
+            New pour
+          </Link>
+        ) : null}
         {reportId ? (
           <Link
             href={`/reports/${reportId}`}
@@ -49,27 +51,34 @@ export default function ConnectionsPage() {
         ) : null}
       </div>
       {loading ? (
-        <div className="flex items-center gap-2 text-sm text-[var(--cafe-mocha)]">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="size-4 animate-spin" />
           Loading pours…
         </div>
       ) : connections.length === 0 ? (
-        <p className="text-sm text-[var(--cafe-mocha)]">
-          No connections yet. Start with a new pour.
-        </p>
+        <div className="flex flex-col items-center py-12 text-center">
+          <GraphCafeMark size={64} />
+          <h2 className="mt-3 text-xl text-foreground">Pour your first connection</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Connect any HTTP API to start exploring.
+          </p>
+          <Link href="/connections/new" className={cn(buttonVariants(), "mt-4")}>
+            Add connection
+          </Link>
+        </div>
       ) : (
         <ul className="space-y-4">
           {connections.map((c) => (
             <li
               key={c.id}
-              className="rounded-2xl border border-[var(--cafe-latte)] bg-white p-5 shadow-sm"
+              className="rounded-lg border border-border bg-card p-5"
             >
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
-                  <h2 className="font-[family-name:var(--font-fraunces)] text-xl text-[var(--cafe-walnut)]">
+                  <h2 className="text-xl text-foreground">
                     {c.name}
                   </h2>
-                  <p className="text-sm text-[var(--cafe-mocha)]">{c.baseUrl}</p>
+                  <p className="text-sm text-muted-foreground">{c.baseUrl}</p>
                   <p className="text-xs text-muted-foreground">Auth: {c.auth}</p>
                 </div>
               </div>

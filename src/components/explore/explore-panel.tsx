@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Loader2, Play } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -82,7 +82,7 @@ export function ExplorePanel({ datasetId }: { datasetId: string }) {
 
   if (loading) {
     return (
-      <div className="flex items-center gap-2 text-sm text-[var(--cafe-mocha)]">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Loader2 className="size-4 animate-spin" />
         Loading roast…
       </div>
@@ -97,7 +97,7 @@ export function ExplorePanel({ datasetId }: { datasetId: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 rounded-2xl border border-[var(--cafe-latte)] bg-white p-4 md:grid-cols-3">
+      <div className="grid gap-4 rounded-lg border border-border bg-card p-4 md:grid-cols-3">
         <div className="space-y-2 md:col-span-2">
           <Label htmlFor="path">Request path</Label>
           <Input id="path" value={path} onChange={(e) => setPath(e.target.value)} />
@@ -113,7 +113,7 @@ export function ExplorePanel({ datasetId }: { datasetId: string }) {
         </div>
         <div className="md:col-span-3">
           <Button type="button" onClick={run} disabled={running}>
-            {running ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
+            {running ? <Loader2 className="size-4 animate-spin" /> : null}
             Execute roast
           </Button>
         </div>
@@ -132,7 +132,7 @@ export function ExplorePanel({ datasetId }: { datasetId: string }) {
             <TabsTrigger value="table">Table</TabsTrigger>
             <TabsTrigger value="json">Raw JSON</TabsTrigger>
           </TabsList>
-          <TabsContent value="table" className="rounded-xl border bg-white p-2">
+          <TabsContent value="table" className="rounded-xl border bg-card p-2">
             {table && table.rows.length > 0 ? (
               <div className="max-h-[480px] overflow-auto">
                 <Table>

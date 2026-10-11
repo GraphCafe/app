@@ -12,7 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Loader2, RefreshCw } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -81,7 +81,7 @@ export function ReportStudioClient({ reportId }: { reportId: string }) {
 
   if (loading) {
     return (
-      <div className="flex items-center gap-2 text-sm text-[var(--cafe-mocha)]">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Loader2 className="size-4 animate-spin" />
         Warming the plate…
       </div>
@@ -95,7 +95,7 @@ export function ReportStudioClient({ reportId }: { reportId: string }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm text-[var(--cafe-mocha)]">
+        <p className="text-sm text-muted-foreground">
           Schema <code className="text-xs">{report.version}</code>
         </p>
         <Button
@@ -105,11 +105,7 @@ export function ReportStudioClient({ reportId }: { reportId: string }) {
           onClick={() => loadData(true)}
           disabled={refreshing}
         >
-          {refreshing ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <RefreshCw className="size-4" />
-          )}
+          {refreshing ? <Loader2 className="size-4 animate-spin" /> : null}
           Refresh data
         </Button>
       </div>
@@ -123,7 +119,7 @@ export function ReportStudioClient({ reportId }: { reportId: string }) {
             return (
               <div
                 key={widget.id}
-                className="rounded-2xl border border-dashed border-[var(--cafe-latte)] p-6 text-sm text-muted-foreground"
+                className="rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground"
               >
                 {widget.title ?? widget.type} — no data yet
               </div>
@@ -158,8 +154,8 @@ function WidgetCard({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-[var(--cafe-latte)] bg-white p-4 shadow-sm">
-      <h2 className="mb-3 font-[family-name:var(--font-fraunces)] text-lg text-[var(--cafe-walnut)]">
+    <section className="rounded-lg border border-border bg-card p-4">
+      <h2 className="mb-3 font-heading text-lg text-foreground">
         {title}
       </h2>
       {children}

@@ -16,7 +16,7 @@ import {
   type Node,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { AlertCircle, Loader2, Menu, Plus, Trash2 } from "lucide-react";
+import { AlertCircle, Loader2, Menu } from "lucide-react";
 import { CafeNode } from "@/components/graph/cafe-node";
 import { TemplateMenu } from "@/components/graph/template-menu";
 import { Button } from "@/components/ui/button";
@@ -84,7 +84,7 @@ function GraphStudioInner() {
         addEdge(
           {
             ...connection,
-            style: { stroke: "var(--cafe-mocha)", strokeWidth: 2 },
+            style: { stroke: "var(--muted-foreground)", strokeWidth: 2 },
           },
           eds,
         ),
@@ -119,7 +119,7 @@ function GraphStudioInner() {
 
   const defaultEdgeOptions = useMemo(
     () => ({
-      style: { stroke: "var(--cafe-mocha)", strokeWidth: 2 },
+      style: { stroke: "var(--muted-foreground)", strokeWidth: 2 },
       animated: false,
     }),
     [],
@@ -129,23 +129,23 @@ function GraphStudioInner() {
 
   return (
     <div className="flex h-full min-h-0 flex-col lg:flex-row">
-      <aside className="hidden w-[min(100%,320px)] shrink-0 border-r border-[var(--cafe-latte)] p-4 lg:block">
+      <aside className="hidden w-[min(100%,320px)] shrink-0 border-r border-border p-4 lg:block">
         <TemplateMenu activeId={activeTemplateId} onSelect={loadTemplate} />
       </aside>
 
       <div className="flex min-h-0 flex-1 flex-col">
-        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--cafe-latte)] bg-[var(--cafe-menu)]/80 px-4 py-3 backdrop-blur-sm">
+        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-muted/80 px-4 py-3 backdrop-blur-sm">
           <div className="flex items-center gap-2">
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
               <SheetTrigger
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--cafe-latte)] bg-transparent text-[var(--cafe-espresso)] lg:hidden hover:bg-white/60"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-transparent text-foreground lg:hidden hover:bg-card/60"
                 aria-label="Open graph menu"
               >
                 <Menu className="h-4 w-4" />
               </SheetTrigger>
               <SheetContent
                 side="left"
-                className="w-[min(100vw,360px)] border-[var(--cafe-latte)] bg-[var(--cafe-walnut)] p-0"
+                className="w-[min(100vw,360px)] border-border bg-foreground p-0"
               >
                 <SheetHeader className="sr-only">
                   <SheetTitle>Graph menu</SheetTitle>
@@ -162,10 +162,10 @@ function GraphStudioInner() {
               </SheetContent>
             </Sheet>
             <div>
-              <h1 className="font-[family-name:var(--font-fraunces)] text-xl text-[var(--cafe-espresso)]">
+              <h1 className="font-heading text-xl text-foreground">
                 Graph.Cafe
               </h1>
-              <p className="text-xs text-[var(--cafe-mocha)]">
+              <p className="text-xs text-muted-foreground">
                 Small graphs, served warm.
               </p>
             </div>
@@ -175,9 +175,8 @@ function GraphStudioInner() {
               type="button"
               size="sm"
               onClick={addNode}
-              className="bg-[var(--cafe-espresso)] text-[var(--cafe-foam)] hover:bg-[var(--cafe-mocha)]"
+              className="bg-foreground text-background hover:bg-muted-foreground"
             >
-              <Plus className="h-4 w-4" />
               Add node
             </Button>
             <Button
@@ -185,23 +184,22 @@ function GraphStudioInner() {
               size="sm"
               variant="outline"
               onClick={clearGraph}
-              className="border-[var(--cafe-latte)] text-[var(--cafe-espresso)]"
+              className="border-border text-foreground"
             >
-              <Trash2 className="h-4 w-4" />
               Clear
             </Button>
           </div>
         </header>
 
-        <div className="relative min-h-[min(70vh,640px)] flex-1 bg-[var(--cafe-canvas)]">
+        <div className="relative min-h-[min(70vh,640px)] flex-1 bg-muted">
           {status === "loading" && (
             <div
-              className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-[var(--cafe-canvas)]/90"
+              className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-muted/90"
               role="status"
               aria-live="polite"
             >
-              <Loader2 className="h-8 w-8 animate-spin text-[var(--cafe-caramel)]" />
-              <p className="text-sm text-[var(--cafe-mocha)]">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">
                 Brewing your graph…
               </p>
             </div>
@@ -209,7 +207,7 @@ function GraphStudioInner() {
 
           {status === "error" && errorMessage && (
             <div
-              className="absolute inset-x-4 top-4 z-20 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 shadow-md"
+              className="absolute inset-x-4 top-4 z-20 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 shadow-[var(--shadow-popover)]"
               role="alert"
             >
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -225,10 +223,10 @@ function GraphStudioInner() {
               className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center px-6 text-center"
               aria-hidden={nodes.length > 0}
             >
-              <p className="font-[family-name:var(--font-fraunces)] text-2xl text-[var(--cafe-espresso)]/90">
+              <p className="font-heading text-2xl text-foreground/90">
                 Your canvas is empty
               </p>
-              <p className="mt-2 max-w-sm text-sm text-[var(--cafe-mocha)]">
+              <p className="mt-2 max-w-sm text-sm text-muted-foreground">
                 Choose a template from the menu or tap{" "}
                 <span className="font-medium">Add node</span> to place your
                 first idea.
@@ -255,14 +253,14 @@ function GraphStudioInner() {
               variant={BackgroundVariant.Dots}
               gap={20}
               size={1}
-              color="var(--cafe-latte)"
+              color="var(--border)"
             />
             <Controls
-              className="!rounded-xl !border-[var(--cafe-latte)] !bg-[var(--cafe-cream)] !shadow-md [&>button]:!border-[var(--cafe-latte)] [&>button]:!bg-white"
+              className="!rounded-xl !border-border !bg-muted !shadow-[var(--shadow-popover)] [&>button]:!border-border [&>button]:!bg-card"
             />
             <MiniMap
-              className="!rounded-xl !border-[var(--cafe-latte)] !bg-[var(--cafe-cream)]/90"
-              nodeColor="var(--cafe-caramel)"
+              className="!rounded-xl !border-border !bg-muted/90"
+              nodeColor="var(--muted-foreground)"
               maskColor="rgba(62, 39, 35, 0.08)"
             />
           </ReactFlow>

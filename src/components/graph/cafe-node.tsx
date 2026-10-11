@@ -33,16 +33,16 @@ function CafeNodeComponent({ id, data, selected }: NodeProps) {
   return (
     <div
       className={cn(
-        "min-w-[120px] max-w-[200px] rounded-2xl border-2 bg-[var(--cafe-cream)] px-3 py-2 shadow-md transition-shadow",
+        "min-w-[120px] max-w-[200px] rounded-lg border-2 bg-muted px-3 py-2 transition-shadow",
         selected
-          ? "border-[var(--cafe-espresso)] shadow-[0_8px_24px_-8px_rgba(62,39,35,0.35)]"
-          : "border-[var(--cafe-latte)]",
+          ? "border-foreground shadow-[0_8px_24px_-8px_rgba(62,39,35,0.35)]"
+          : "border-border",
       )}
     >
       <Handle
         type="target"
         position={Position.Top}
-        className="!h-2.5 !w-2.5 !border-2 !border-[var(--cafe-espresso)] !bg-[var(--cafe-foam)]"
+        className="!h-2.5 !w-2.5 !border-2 !border-foreground !bg-background"
       />
       {editing ? (
         <input
@@ -57,7 +57,7 @@ function CafeNodeComponent({ id, data, selected }: NodeProps) {
               setEditing(false);
             }
           }}
-          className="w-full rounded-md border border-[var(--cafe-latte)] bg-white/80 px-1.5 py-0.5 text-sm text-[var(--cafe-espresso)] outline-none focus:ring-2 focus:ring-[var(--cafe-caramel)]"
+          className="w-full rounded-md border border-border bg-card/80 px-1.5 py-0.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-muted-foreground"
         />
       ) : (
         <button
@@ -68,11 +68,11 @@ function CafeNodeComponent({ id, data, selected }: NodeProps) {
           }}
           className="w-full text-left"
         >
-          <p className="font-medium text-sm text-[var(--cafe-espresso)] leading-tight">
+          <p className="font-medium text-sm text-foreground leading-tight">
             {nodeData.label}
           </p>
           {nodeData.flavor ? (
-            <p className="mt-0.5 text-[10px] uppercase tracking-wide text-[var(--cafe-mocha)]/80">
+            <p className="mt-0.5 text-[10px] uppercase tracking-wide text-muted-foreground/80">
               {nodeData.flavor}
             </p>
           ) : null}
@@ -81,7 +81,7 @@ function CafeNodeComponent({ id, data, selected }: NodeProps) {
       <Handle
         type="source"
         position={Position.Bottom}
-        className="!h-2.5 !w-2.5 !border-2 !border-[var(--cafe-espresso)] !bg-[var(--cafe-foam)]"
+        className="!h-2.5 !w-2.5 !border-2 !border-foreground !bg-background"
       />
     </div>
   );

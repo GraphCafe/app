@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, FlaskConical } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -104,7 +104,7 @@ export function ConnectionPourForm({
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <div className="space-y-4 rounded-2xl border border-[var(--cafe-latte)] bg-white p-5 shadow-sm">
+      <div className="space-y-4 rounded-lg border border-border bg-card p-5">
         <div className="space-y-2">
           <Label htmlFor="name">Pour name</Label>
           <Input
@@ -200,7 +200,7 @@ export function ConnectionPourForm({
         </div>
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="secondary" onClick={runTest} disabled={testing}>
-            {testing ? <Loader2 className="size-4 animate-spin" /> : <FlaskConical className="size-4" />}
+            {testing ? <Loader2 className="size-4 animate-spin" /> : null}
             Test pour
           </Button>
           <Button type="button" onClick={saveConnection} disabled={saving}>
@@ -209,16 +209,16 @@ export function ConnectionPourForm({
           </Button>
         </div>
         {saveError ? <ApiErrorAlert message={saveError} /> : null}
-        <p className="text-xs text-[var(--cafe-mocha)]">
+        <p className="text-xs text-muted-foreground">
           Tokens stay on the server — they are never bundled into the browser app.
         </p>
       </div>
-      <div className="rounded-2xl border border-[var(--cafe-latte)] bg-[var(--cafe-cream)] p-5">
-        <h2 className="font-[family-name:var(--font-fraunces)] text-lg text-[var(--cafe-walnut)]">
+      <div className="rounded-lg border border-border bg-muted p-5">
+        <h2 className="font-heading text-lg text-foreground">
           Tasting notes
         </h2>
         {!testResult ? (
-          <p className="mt-2 text-sm text-[var(--cafe-mocha)]">
+          <p className="mt-2 text-sm text-muted-foreground">
             Run a test GET to preview status and JSON from your API.
           </p>
         ) : testResult.ok ? (

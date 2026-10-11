@@ -47,8 +47,8 @@ export function DatasetRoastForm({ connectionId }: { connectionId: string }) {
   }
 
   return (
-    <div className="mt-4 space-y-3 rounded-xl border border-[var(--cafe-latte)] bg-[var(--cafe-cream)] p-4">
-      <h3 className="text-sm font-semibold text-[var(--cafe-espresso)]">New dataset roast</h3>
+    <div className="mt-4 space-y-3 rounded-xl border border-border bg-muted p-4">
+      <h3 className="text-sm font-semibold text-foreground">New dataset roast</h3>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1">
           <Label htmlFor={`name-${connectionId}`}>Name</Label>
