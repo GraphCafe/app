@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="11 18 104 104" width="104" height="104" role="img" aria-label="Graph.Cafe">
+  <!-- Graph.Cafe master mark (light). Hand-drawn cup; steam drawn as two chart lines. -->
+  <!-- Steam knockout is a mask (not a background-colored stroke) so the mark works on any background. -->
+  <defs>
+    <mask id="gc-steam-knockout" maskUnits="userSpaceOnUse" x="0" y="0" width="130" height="130">
+      <rect width="130" height="130" fill="#fff"/>
+      <g transform="translate(-3 0)" fill="none" stroke="#000" stroke-linecap="round">
+        <path d="M73 58 C76.2 53.2 79.6 48 83.1 42.9 M82.8 43.3 C83.9 43.8 84.9 44.3 86.1 44.9 M85.8 45 C87.6 42.5 89.5 39.6 91.35 36.75" stroke-width="4"/>
+        <path d="M54 68 C58.6 58.4 63.8 49.1 69.8 40.3 M69.3 40.8 C71.2 41.6 73 42.8 75 44.2 M74.6 44.4 C76.6 40.9 78.7 37.1 80.9 33.4" stroke-width="6"/>
+      </g>
+    </mask>
+  </defs>
+  <g mask="url(#gc-steam-knockout)" fill="none" stroke="#322b28" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="60" cy="106.5" rx="38" ry="5" fill="#322b28" fill-opacity="0.06" stroke="none"/>
+    <ellipse cx="57" cy="105" rx="20" ry="2.6" fill="#322b28" fill-opacity="0.07" stroke="none"/>
+    <path d="M18.6 63.5 C18 82 31 102 55 103.5 C77 104.8 92 86 94.6 61.5" stroke-width="3"/>
+    <path d="M45 104.4 C51 106.4 61 106.4 67 104" stroke-width="2"/>
+    <path d="M95.1 69.6 C104.5 62.6 113 65.8 110.5 76 C108.5 84 100 87.2 87.1 84.1" stroke-width="2.7"/>
+    <path d="M24 55 C34 49.5 48 48.6 60 48.8 C76 49.2 90 52 93.6 58.5 C96.5 64 86 72.5 66 74.6 C48 76.4 28 74.5 20.5 68.6 C14.5 63.8 18 58 27.5 53.8 C30 52.8 32.5 52 35 51.4" stroke-width="2.7"/>
+    <path d="M28 66 C40 70.5 70 71.5 86 64" stroke-width="1.1" stroke-opacity="0.4"/>
+    <path d="M95 74.5 C91.6 88.5 81.5 99.8 66 103.4" stroke-width="0.9" stroke-opacity="0.5"/>
+    <path d="M17 70 C18.5 80 23 89 30 95" stroke-width="0.9" stroke-opacity="0.4"/>
+    <path d="M71 99 L78 92.5 M77.5 97 L84.5 90 M83.5 93.5 L89 87.5" stroke-width="1" stroke-opacity="0.45"/>
+  </g>
+  <g transform="translate(-3 0)" fill="none" stroke="#322b28" stroke-linecap="round" stroke-linejoin="round">
+    <g opacity="0.48">
+      <path d="M73 58 C76.2 53.2 79.6 48 83.1 42.9 M82.8 43.3 C83.9 43.8 84.9 44.3 86.1 44.9 M85.8 45 C87.6 42.5 89.5 39.6 91.35 36.75" stroke-width="1.1"/>
+      <path d="M89 38 Q90.2 37.4 91.35 36.75 Q91.3 38.1 91.15 39.4" stroke-width="1.1"/>
+    </g>
+    <path d="M54 68 C58.6 58.4 63.8 49.1 69.8 40.3 M69.3 40.8 C71.2 41.6 73 42.8 75 44.2 M74.6 44.4 C76.6 40.9 78.7 37.1 80.9 33.4" stroke-width="1.9"/>
+    <path d="M61.6 54.6 C64.2 50 66.9 45.3 69.6 40.6 M76.6 41.2 C77.9 38.9 79 36.8 80.2 34.6" stroke-width="2.6"/>
+    <path d="M56.5 62.8 C59.5 57.6 62.4 52.3 65.4 47.2 M75.3 40.6 C76.6 38.3 77.8 36.3 78.9 34.4" stroke-width="0.8" stroke-opacity="0.35"/>
+    <path d="M83.3 32.1 C83.3 33.1 82.5 33.7 81.6 33.6 C80.7 33.5 80.1 32.8 80.15 31.9 C80.2 31 81 30.4 81.8 30.45 C82.6 30.5 83.25 31.1 83.3 31.8" stroke-width="1.1" stroke-opacity="0.85"/>
+  </g>
+</svg>
