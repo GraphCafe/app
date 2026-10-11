@@ -33,6 +33,24 @@ Open [http://localhost:43127](http://localhost:43127).
 
 Demo data: a **JSONPlaceholder** connection, dataset, and sample report are seeded on first API access.
 
+## Cloud Agent environment
+
+Cursor Cloud Agents can bootstrap from [`.cursor/environment.json`](.cursor/environment.json) in this repo:
+
+| Phase | Command |
+| ----- | ------- |
+| **install** | `npm ci` |
+| **start** | `bash .cursor/start-dev.sh` (runs `npm run dev` on port **43127**, waits until HTTP responds) |
+
+After linking a new Project or environment to **GraphCafe/app**, trigger an environment build so `install` is baked into the snapshot; each agent boot runs `start` and serves the app at [http://127.0.0.1:43127](http://127.0.0.1:43127).
+
+**Secrets** (add under Cloud Agents → Environment → Secrets, not in committed config):
+
+| Secret | Required | Purpose |
+| ------ | -------- | ------- |
+| `GRAPH_CAFE_SECRET_KEY` or `GRAPH_CAFE_ENCRYPTION_KEY` | Recommended | Encrypt stored API credentials (dev default if unset) |
+| `GITHUB_TOKEN` | Optional | PAT with `repo` scope so agents can push branches and open PRs |
+
 ## Environment variables
 
 | Variable | Required | Purpose |
