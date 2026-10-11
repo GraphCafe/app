@@ -72,7 +72,7 @@ function CafeNodeComponent({ id, data, selected }: NodeProps) {
             {nodeData.label}
           </p>
           {nodeData.flavor ? (
-            <p className="mt-0.5 text-[10px] uppercase tracking-wide text-muted-foreground/80">
+            <p className="mt-0.5 text-xs text-muted-foreground">
               {nodeData.flavor}
             </p>
           ) : null}

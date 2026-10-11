@@ -32,6 +32,15 @@ describe("legacy sweep", () => {
     }
   });
 
+  it("uses sentence case and design tokens instead of raw Tailwind palette colors", () => {
+    for (const { path, src } of files) {
+      if (/components[\\/]ui/.test(path)) continue;
+      expect(src, path).not.toMatch(/\buppercase\b/);
+      expect(src, path).not.toMatch(/\b(bg|text|border)-(red|amber|green|slate|gray|zinc|stone)-\d{2,3}\b/);
+      expect(src, path).not.toMatch(/\bbg-foreground\b/);
+    }
+  });
+
   it("keeps the home page to one heading, one line, and two actions", () => {
     const home = readFileSync("src/app/page.tsx", "utf8");
     expect(home).toContain("Brew a report from any API");

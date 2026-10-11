@@ -154,7 +154,7 @@ function WidgetCard({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-lg border border-border bg-card p-4">
+    <section className="min-w-0 rounded-lg border border-border bg-card p-4">
       <h2 className="mb-3 font-heading text-lg text-foreground">
         {title}
       </h2>
@@ -232,7 +232,7 @@ function ChartWidgetView({
         <XAxis dataKey="x" stroke={CHART_CHROME.axis} tick={axisTick} />
         <YAxis stroke={CHART_CHROME.axis} tick={axisTick} />
         <Tooltip contentStyle={tooltipStyle} />
-        <Line type="monotone" dataKey="y" stroke={seriesColor(0)} strokeWidth={2} dot={false} />
+        <Line type="monotone" dataKey="y" stroke={seriesColor(0)} strokeWidth={2} dot={false} isAnimationActive={false} />
       </LineChart>
     ) : (
       <BarChart data={chartData}>
@@ -240,7 +240,7 @@ function ChartWidgetView({
         <XAxis dataKey="x" stroke={CHART_CHROME.axis} tick={axisTick} />
         <YAxis stroke={CHART_CHROME.axis} tick={axisTick} />
         <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "var(--muted)" }} />
-        <Bar dataKey="y" fill={seriesColor(0)} radius={[4, 4, 0, 0]} />
+        <Bar dataKey="y" fill={seriesColor(0)} radius={[4, 4, 0, 0]} isAnimationActive={false} />
       </BarChart>
     );
 

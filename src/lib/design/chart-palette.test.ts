@@ -38,4 +38,18 @@ describe("report chart", () => {
     expect(src).toMatch(/seriesColor\(0\)/);
     expect(src).toMatch(/CHART_CHROME\.grid/);
   });
+
+  it("draws marks immediately instead of a 1.5s entry animation (spec motion is 150-200ms)", async () => {
+    const { readFileSync } = await import("node:fs");
+    const src = readFileSync("src/components/reports/report-studio-client.tsx", "utf8");
+    expect(src.match(/isAnimationActive=\{false\}/g)?.length).toBe(2);
+  });
+});
+
+describe("report layout", () => {
+  it("lets widget cards shrink inside the grid so wide tables scroll inside the card, not the page", async () => {
+    const { readFileSync } = await import("node:fs");
+    const src = readFileSync("src/components/reports/report-studio-client.tsx", "utf8");
+    expect(src).toMatch(/<section className="[^"]*\bmin-w-0\b/);
+  });
 });

@@ -134,7 +134,7 @@ function GraphStudioInner() {
       </aside>
 
       <div className="flex min-h-0 flex-1 flex-col">
-        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-muted/80 px-4 py-3 backdrop-blur-sm">
+        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-background px-4 py-3">
           <div className="flex items-center gap-2">
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
               <SheetTrigger
@@ -145,7 +145,7 @@ function GraphStudioInner() {
               </SheetTrigger>
               <SheetContent
                 side="left"
-                className="w-[min(100vw,360px)] border-border bg-foreground p-0"
+                className="w-[min(100vw,360px)] border-border bg-background p-0"
               >
                 <SheetHeader className="sr-only">
                   <SheetTitle>Graph menu</SheetTitle>
@@ -175,7 +175,6 @@ function GraphStudioInner() {
               type="button"
               size="sm"
               onClick={addNode}
-              className="bg-foreground text-background hover:bg-muted-foreground"
             >
               Add node
             </Button>
@@ -207,7 +206,7 @@ function GraphStudioInner() {
 
           {status === "error" && errorMessage && (
             <div
-              className="absolute inset-x-4 top-4 z-20 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 shadow-[var(--shadow-popover)]"
+              className="absolute inset-x-4 top-4 z-20 flex items-start gap-2 rounded-lg border border-status-error/30 bg-status-error-tint px-4 py-3 text-sm text-status-error shadow-[var(--shadow-popover)]"
               role="alert"
             >
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
