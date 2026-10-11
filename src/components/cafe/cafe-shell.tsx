@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { Coffee } from "lucide-react";
+import { GraphCafeMark } from "@/components/brand/graph-cafe-mark";
+import { ShellNav } from "@/components/cafe/shell-nav";
+import { ThemeToggle } from "@/components/cafe/theme-toggle";
 
 const links = [
   { href: "/", label: "Home" },
@@ -17,36 +19,22 @@ export function CafeShell({
   subtitle?: string;
 }) {
   return (
-    <div className="min-h-[100dvh] bg-[var(--cafe-foam)]">
-      <header className="border-b border-[var(--cafe-latte)] bg-[var(--cafe-menu)]">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-          <Link
-            href="/"
-            className="flex items-center gap-2 font-[family-name:var(--font-fraunces)] text-lg text-[var(--cafe-walnut)]"
-          >
-            <Coffee className="size-5" aria-hidden />
-            Graph.Cafe
+    <div className="min-h-[100dvh] bg-background">
+      <header className="border-b bg-background">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-3">
+          <Link href="/" className="flex items-center gap-2 text-foreground">
+            <GraphCafeMark size={32} />
+            <span className="font-heading text-[21px] font-medium leading-none">Graph.Cafe</span>
           </Link>
-          <nav className="flex flex-wrap gap-1 text-sm">
-            {links.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                className="rounded-full px-3 py-1 text-[var(--cafe-mocha)] transition hover:bg-[var(--cafe-cream)] hover:text-[var(--cafe-espresso)]"
-              >
-                {l.label}
-              </Link>
-            ))}
-          </nav>
+          <div className="flex items-center gap-4">
+            <ShellNav links={links} />
+            <ThemeToggle />
+          </div>
         </div>
         {title ? (
           <div className="mx-auto max-w-6xl px-4 pb-4">
-            <h1 className="font-[family-name:var(--font-fraunces)] text-2xl text-[var(--cafe-walnut)]">
-              {title}
-            </h1>
-            {subtitle ? (
-              <p className="mt-1 text-sm text-[var(--cafe-mocha)]">{subtitle}</p>
-            ) : null}
+            <h1 className="text-3xl text-foreground">{title}</h1>
+            {subtitle ? <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p> : null}
           </div>
         ) : null}
       </header>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Commissioner, Crimson_Pro, Inconsolata } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { themeInitScript } from "@/lib/design/theme";
 import "./globals.css";
 
 const crimson = Crimson_Pro({
@@ -32,7 +33,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       className={`${crimson.variable} ${commissioner.variable} ${inconsolata.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="min-h-full">
         <TooltipProvider>{children}</TooltipProvider>
       </body>
