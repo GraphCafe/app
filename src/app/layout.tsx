@@ -16,9 +16,9 @@ const nunito = Nunito({
 });
 
 export const metadata: Metadata = {
-  title: "Graph.Cafe — Small graphs, served warm",
+  title: "Graph.Cafe — BYO APIs, served warm",
   description:
-    "Create and lightly edit small node graphs with a cozy café aesthetic. Templates, drag-and-connect, and rename on the fly.",
+    "Connect any HTTP API, explore JSON as tables, and build small reports with café-flavored UX.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

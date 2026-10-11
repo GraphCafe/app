@@ -1,0 +1,249 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { Loader2, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { ApiErrorAlert } from "@/components/cafe/api-error-alert";
+import type {
+  ChartWidget,
+  DatasetResult,
+  ReportDefinition,
+  TableWidget,
+} from "@/lib/connections/types";
+
+type ExecuteResponse =
+  | { ok: true; dataset?: DatasetResult }
+  | { ok: false; error: string; status?: number };
+
+export function ReportStudioClient({ reportId }: { reportId: string }) {
+  const [report, setReport] = useState<ReportDefinition | null>(null);
+  const [datasets, setDatasets] = useState<Record<string, DatasetResult>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  async function loadData(refresh = false) {
+    if (refresh) setRefreshing(true);
+    else setLoading(true);
+    try {
+      const res = await fetch(`/api/reports/${reportId}`);
+      const data = await res.json();
+      if (!res.ok) {
+        setErrors({ report: data.error ?? "Report not found." });
+        return;
+      }
+      const r = data.report as ReportDefinition;
+      setReport(r);
+      const next: Record<string, DatasetResult> = {};
+      const nextErrors: Record<string, string> = {};
+      for (const ds of r.datasets) {
+        const exec = await fetch(`/api/datasets/${ds.id}/execute`, {
+          method: "POST",
+        });
+        const payload = (await exec.json()) as ExecuteResponse;
+        if (payload.ok && payload.dataset) {
+          next[ds.id] = payload.dataset;
+        } else if (!payload.ok) {
+          nextErrors[ds.id] = payload.error;
+        }
+      }
+      setDatasets(next);
+      setErrors(nextErrors);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }
+
+  useEffect(() => {
+    loadData();
+  }, [reportId]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-[var(--cafe-mocha)]">
+        <Loader2 className="size-4 animate-spin" />
+        Warming the plate…
+      </div>
+    );
+  }
+
+  if (!report) {
+    return <ApiErrorAlert message={errors.report ?? "Report missing."} />;
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-[var(--cafe-mocha)]">
+          Schema <code className="text-xs">{report.version}</code>
+        </p>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={() => loadData(true)}
+          disabled={refreshing}
+        >
+          {refreshing ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <RefreshCw className="size-4" />
+          )}
+          Refresh data
+        </Button>
+      </div>
+      {Object.entries(errors).map(([id, msg]) => (
+        <ApiErrorAlert key={id} message={msg} />
+      ))}
+      <div className="grid gap-4 md:grid-cols-2">
+        {report.widgets.map((widget) => {
+          const data = datasets[widget.datasetId];
+          if (!data) {
+            return (
+              <div
+                key={widget.id}
+                className="rounded-2xl border border-dashed border-[var(--cafe-latte)] p-6 text-sm text-muted-foreground"
+              >
+                {widget.title ?? widget.type} — no data yet
+              </div>
+            );
+          }
+          if (widget.type === "table") {
+            return (
+              <WidgetCard key={widget.id} title={widget.title ?? "Table"}>
+                <TableWidgetView widget={widget} data={data} />
+              </WidgetCard>
+            );
+          }
+          if (widget.type === "chart") {
+            return (
+              <WidgetCard key={widget.id} title={widget.title ?? "Chart"}>
+                <ChartWidgetView widget={widget} data={data} />
+              </WidgetCard>
+            );
+          }
+          return null;
+        })}
+      </div>
+    </div>
+  );
+}
+
+function WidgetCard({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-2xl border border-[var(--cafe-latte)] bg-white p-4 shadow-sm">
+      <h2 className="mb-3 font-[family-name:var(--font-fraunces)] text-lg text-[var(--cafe-walnut)]">
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
+
+function TableWidgetView({
+  widget,
+  data,
+}: {
+  widget: TableWidget;
+  data: DatasetResult;
+}) {
+  const cols = widget.table.columnIds?.length
+    ? data.columns.filter((c) => widget.table.columnIds?.includes(c.id))
+    : data.columns;
+  const pageSize = widget.table.pageSize ?? 10;
+  return (
+    <div className="max-h-80 overflow-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            {cols.map((c) => (
+              <TableHead key={c.id}>{c.name}</TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {data.rows.slice(0, pageSize).map((row, i) => (
+            <TableRow key={i}>
+              {cols.map((c) => (
+                <TableCell key={c.id} className="font-mono text-xs">
+                  {String(row[c.id] ?? "")}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+function ChartWidgetView({
+  widget,
+  data,
+}: {
+  widget: ChartWidget;
+  data: DatasetResult;
+}) {
+  const { xColumnId, yColumnId, kind } = widget.chart;
+  const chartData = data.rows.map((row) => ({
+    x: row[xColumnId],
+    y: Number(row[yColumnId]),
+  }));
+
+  if (chartData.length === 0) {
+    return <p className="text-sm text-muted-foreground">No chartable rows.</p>;
+  }
+
+  const ChartInner =
+    kind === "line" ? (
+      <LineChart data={chartData}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="x" />
+        <YAxis />
+        <Tooltip />
+        <Line type="monotone" dataKey="y" stroke="#6d4c41" strokeWidth={2} />
+      </LineChart>
+    ) : (
+      <BarChart data={chartData}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="x" />
+        <YAxis />
+        <Tooltip />
+        <Bar dataKey="y" fill="#a1887f" />
+      </BarChart>
+    );
+
+  return (
+    <div className="h-64 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        {ChartInner}
+      </ResponsiveContainer>
+    </div>
+  );
+}

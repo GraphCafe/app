@@ -21,7 +21,7 @@ export type ColumnSchema = {
   nullable?: boolean;
 };
 
-export type AuthKind = "none" | "apiKeyHeader" | "bearer";
+export type AuthKind = "none" | "apiKeyHeader" | "bearer" | "basic";
 
 /** Stored server-side; referenced by id from datasets. */
 export type ApiConnection = {
