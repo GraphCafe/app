@@ -2,7 +2,17 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+/* Dark when an ancestor has .dark, or when the OS is dark and no .light override is set. */
+@custom-variant dark {
+  &:where(.dark, .dark *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not(.light), :root:not(.light) *) {
+      @slot;
+    }
+  }
+}
 
 @theme inline {
   --color-background: var(--background);
@@ -10,19 +20,23 @@
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
+  --color-chart-8: var(--chart-8);
+  --color-chart-7: var(--chart-7);
+  --color-chart-6: var(--chart-6);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+  --color-chart-other: var(--chart-other);
+  --color-gridline: var(--gridline);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-status-success: var(--status-success);
+  --color-status-success-tint: var(--status-success-tint);
+  --color-status-warning: var(--status-warning);
+  --color-status-warning-tint: var(--status-warning-tint);
+  --color-status-error: var(--status-error);
+  --color-status-error-tint: var(--status-error-tint);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -49,82 +63,140 @@
 }
 
 :root {
-  --cafe-walnut: #3e2723;
-  --cafe-espresso: #4e342e;
-  --cafe-mocha: #6d4c41;
-  --cafe-caramel: #a1887f;
-  --cafe-latte: #d7ccc8;
-  --cafe-cream: #fff8e7;
-  --cafe-foam: #faf6f0;
-  --cafe-menu: #f5ebe0;
-  --cafe-canvas: #efe6dc;
-
-  --background: var(--cafe-foam);
-  --foreground: var(--cafe-espresso);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --background: #faf6f0;
+  --foreground: #322b28;
+  --card: #ffffff;
+  --card-foreground: #322b28;
+  --popover: #ffffff;
+  --popover-foreground: #322b28;
+  --primary: #322b28;
+  --primary-foreground: #faf6f0;
+  --secondary: #f1ebe3;
+  --secondary-foreground: #322b28;
+  --muted: #f1ebe3;
+  --muted-foreground: #746b65;
+  --accent: #f1ebe3;
+  --accent-foreground: #322b28;
+  --destructive: #a33a2c;
+  --border: #e6dfd7;
+  --input: #958a82;
+  --ring: #322b28;
+  --surface-sunken: #f1ebe3;
+  --gridline: #efe9e2;
+  --status-success: #4a6b3f;
+  --status-success-tint: #eef1e6;
+  --status-warning: #8a6113;
+  --status-warning-tint: #f6eedb;
+  --status-error: #a33a2c;
+  --status-error-tint: #f8e6e1;
+  --chart-1: #5594d2;
+  --chart-2: #974a24;
+  --chart-3: #089678;
+  --chart-4: #a07a1a;
+  --chart-5: #c0719f;
+  --chart-6: #4d701f;
+  --chart-7: #9181cf;
+  --chart-8: #9a444a;
+  --chart-other: #746b65;
+  --logo-shadow-1: rgb(50 43 40 / 0.06);
+  --logo-shadow-2: rgb(50 43 40 / 0.07);
+  --shadow-popover: 0 8px 24px rgb(50 43 40 / 0.1), 0 2px 6px rgb(50 43 40 / 0.06);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+
+  /* Legacy café palette, aliased to the new tokens until the sweep removes it. */
+  --cafe-walnut: var(--foreground);
+  --cafe-espresso: var(--foreground);
+  --cafe-mocha: var(--muted-foreground);
+  --cafe-caramel: var(--muted-foreground);
+  --cafe-latte: var(--border);
+  --cafe-cream: var(--surface-sunken);
+  --cafe-menu: var(--surface-sunken);
+  --cafe-canvas: var(--surface-sunken);
+  --cafe-foam: var(--background);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #1c1b19;
+  --foreground: #ece8e1;
+  --card: #252421;
+  --card-foreground: #ece8e1;
+  --popover: #252421;
+  --popover-foreground: #ece8e1;
+  --primary: #ece8e1;
+  --primary-foreground: #1c1b19;
+  --secondary: #2f2e2b;
+  --secondary-foreground: #ece8e1;
+  --muted: #2f2e2b;
+  --muted-foreground: #a8a39b;
+  --accent: #2f2e2b;
+  --accent-foreground: #ece8e1;
+  --destructive: #e07a68;
+  --border: #3a3834;
+  --input: #75706a;
+  --ring: #ece8e1;
+  --surface-sunken: #2f2e2b;
+  --gridline: #302f2b;
+  --status-success: #8fb27f;
+  --status-success-tint: #263024;
+  --status-warning: #d1a34a;
+  --status-warning-tint: #332b1b;
+  --status-error: #e07a68;
+  --status-error-tint: #3a2420;
+  --chart-1: #4281bf;
+  --chart-2: #a75934;
+  --chart-3: #2ea98a;
+  --chart-4: #b28c32;
+  --chart-5: #ba6b99;
+  --chart-6: #7ba051;
+  --chart-7: #9484d3;
+  --chart-8: #aa5358;
+  --chart-other: #a8a39b;
+  --logo-shadow-1: rgb(0 0 0 / 0.35);
+  --logo-shadow-2: rgb(0 0 0 / 0.35);
+  --shadow-popover: 0 8px 24px rgb(0 0 0 / 0.45), 0 2px 6px rgb(0 0 0 / 0.3);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --background: #1c1b19;
+    --foreground: #ece8e1;
+    --card: #252421;
+    --card-foreground: #ece8e1;
+    --popover: #252421;
+    --popover-foreground: #ece8e1;
+    --primary: #ece8e1;
+    --primary-foreground: #1c1b19;
+    --secondary: #2f2e2b;
+    --secondary-foreground: #ece8e1;
+    --muted: #2f2e2b;
+    --muted-foreground: #a8a39b;
+    --accent: #2f2e2b;
+    --accent-foreground: #ece8e1;
+    --destructive: #e07a68;
+    --border: #3a3834;
+    --input: #75706a;
+    --ring: #ece8e1;
+    --surface-sunken: #2f2e2b;
+    --gridline: #302f2b;
+    --status-success: #8fb27f;
+    --status-success-tint: #263024;
+    --status-warning: #d1a34a;
+    --status-warning-tint: #332b1b;
+    --status-error: #e07a68;
+    --status-error-tint: #3a2420;
+    --chart-1: #4281bf;
+    --chart-2: #a75934;
+    --chart-3: #2ea98a;
+    --chart-4: #b28c32;
+    --chart-5: #ba6b99;
+    --chart-6: #7ba051;
+    --chart-7: #9484d3;
+    --chart-8: #aa5358;
+    --chart-other: #a8a39b;
+    --logo-shadow-1: rgb(0 0 0 / 0.35);
+    --logo-shadow-2: rgb(0 0 0 / 0.35);
+    --shadow-popover: 0 8px 24px rgb(0 0 0 / 0.45), 0 2px 6px rgb(0 0 0 / 0.3);
+  }
 }
 
 @layer base {
