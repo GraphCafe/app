@@ -1,0 +1,27 @@
+export type {
+  ApiConnection,
+  AuthKind,
+  ChartEncoding,
+  ChartKind,
+  ChartWidget,
+  ColumnSchema,
+  ColumnType,
+  ConnectionId,
+  DatasetDefinition,
+  DatasetId,
+  DatasetRequest,
+  DatasetResult,
+  HttpMethod,
+  KpiWidget,
+  ProxyExecuteRequest,
+  ProxyExecuteResponse,
+  ReportDefinition,
+  ReportId,
+  ReportLayout,
+  ReportWidget,
+  TableWidget,
+  TableWidgetConfig,
+  WidgetId,
+} from "./types";
+
+export { GRAPH_CAFE_REPORT_VERSION } from "./types";
