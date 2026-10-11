@@ -10,7 +10,7 @@ type Props = { params: Promise<{ datasetId: string }> };
 export default async function ExplorePage({ params }: Props) {
   const { datasetId } = await params;
   return (
-    <CafeShell title="Explore" subtitle="Execute the roast and preview JSON + table.">
+    <CafeShell title="Explore">
       <Suspense
         fallback={
           <div className="flex items-center gap-2 text-sm text-muted-foreground">

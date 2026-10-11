@@ -10,7 +10,7 @@ type Props = { params: Promise<{ id: string }> };
 export default async function ReportPage({ params }: Props) {
   const { id } = await params;
   return (
-    <CafeShell title="Report Studio" subtitle="Saved widgets on your data plate.">
+    <CafeShell title="Report Studio">
       <Suspense
         fallback={
           <div className="flex items-center gap-2 text-sm text-muted-foreground">

@@ -217,7 +217,7 @@ function ChartWidgetView({
     return <p className="text-sm text-muted-foreground">No chartable rows.</p>;
   }
 
-  const axisTick = { fill: CHART_CHROME.tick, fontSize: 12 };
+  const axisTick = { fill: CHART_CHROME.tick, fontSize: 12, fontVariantNumeric: "tabular-nums" };
   const tooltipStyle = {
     background: "var(--popover)",
     border: "1px solid var(--border)",
@@ -231,7 +231,11 @@ function ChartWidgetView({
         <CartesianGrid stroke={CHART_CHROME.grid} vertical={false} />
         <XAxis dataKey="x" stroke={CHART_CHROME.axis} tick={axisTick} />
         <YAxis stroke={CHART_CHROME.axis} tick={axisTick} />
-        <Tooltip contentStyle={tooltipStyle} />
+        <Tooltip
+          contentStyle={tooltipStyle}
+          itemStyle={{ color: CHART_CHROME.label }}
+          cursor={{ stroke: CHART_CHROME.axis }}
+        />
         <Line type="monotone" dataKey="y" stroke={seriesColor(0)} strokeWidth={2} dot={false} isAnimationActive={false} />
       </LineChart>
     ) : (
@@ -239,7 +243,11 @@ function ChartWidgetView({
         <CartesianGrid stroke={CHART_CHROME.grid} vertical={false} />
         <XAxis dataKey="x" stroke={CHART_CHROME.axis} tick={axisTick} />
         <YAxis stroke={CHART_CHROME.axis} tick={axisTick} />
-        <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "var(--muted)" }} />
+        <Tooltip
+          contentStyle={tooltipStyle}
+          itemStyle={{ color: CHART_CHROME.label }}
+          cursor={{ fill: "var(--muted)" }}
+        />
         <Bar dataKey="y" fill={seriesColor(0)} radius={[4, 4, 0, 0]} isAnimationActive={false} />
       </BarChart>
     );

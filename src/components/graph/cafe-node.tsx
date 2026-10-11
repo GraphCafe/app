@@ -35,7 +35,7 @@ function CafeNodeComponent({ id, data, selected }: NodeProps) {
       className={cn(
         "min-w-[120px] max-w-[200px] rounded-lg border-2 bg-muted px-3 py-2 transition-shadow",
         selected
-          ? "border-foreground shadow-[0_8px_24px_-8px_rgba(62,39,35,0.35)]"
+          ? "border-foreground"
           : "border-border",
       )}
     >

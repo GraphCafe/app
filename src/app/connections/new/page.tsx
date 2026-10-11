@@ -9,7 +9,6 @@ export default function NewConnectionPage() {
   return (
     <CafeShell
       title="New pour"
-      subtitle="Name your connection, paste credentials once, and test a GET."
     >
       <ConnectionPourForm
         onSaved={(id) => {

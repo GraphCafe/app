@@ -161,14 +161,7 @@ function GraphStudioInner() {
                 </div>
               </SheetContent>
             </Sheet>
-            <div>
-              <h1 className="font-heading text-xl text-foreground">
-                Graph.Cafe
-              </h1>
-              <p className="text-xs text-muted-foreground">
-                Small graphs, served warm.
-              </p>
-            </div>
+            <h1 className="font-heading text-xl text-foreground">Graph.Cafe</h1>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button
@@ -260,7 +253,7 @@ function GraphStudioInner() {
             <MiniMap
               className="!rounded-xl !border-border !bg-muted/90"
               nodeColor="var(--muted-foreground)"
-              maskColor="rgba(62, 39, 35, 0.08)"
+              maskColor="color-mix(in srgb, var(--foreground) 8%, transparent)"
             />
           </ReactFlow>
         </div>
