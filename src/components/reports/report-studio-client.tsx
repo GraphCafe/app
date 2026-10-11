@@ -23,6 +23,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ApiErrorAlert } from "@/components/cafe/api-error-alert";
+import { CHART_CHROME, seriesColor } from "@/lib/design/chart-palette";
 import type {
   ChartWidget,
   DatasetResult,
@@ -220,22 +221,30 @@ function ChartWidgetView({
     return <p className="text-sm text-muted-foreground">No chartable rows.</p>;
   }
 
+  const axisTick = { fill: CHART_CHROME.tick, fontSize: 12 };
+  const tooltipStyle = {
+    background: "var(--popover)",
+    border: "1px solid var(--border)",
+    borderRadius: 8,
+    color: CHART_CHROME.label,
+  };
+
   const ChartInner =
     kind === "line" ? (
       <LineChart data={chartData}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="x" />
-        <YAxis />
-        <Tooltip />
-        <Line type="monotone" dataKey="y" stroke="#6d4c41" strokeWidth={2} />
+        <CartesianGrid stroke={CHART_CHROME.grid} vertical={false} />
+        <XAxis dataKey="x" stroke={CHART_CHROME.axis} tick={axisTick} />
+        <YAxis stroke={CHART_CHROME.axis} tick={axisTick} />
+        <Tooltip contentStyle={tooltipStyle} />
+        <Line type="monotone" dataKey="y" stroke={seriesColor(0)} strokeWidth={2} dot={false} />
       </LineChart>
     ) : (
       <BarChart data={chartData}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="x" />
-        <YAxis />
-        <Tooltip />
-        <Bar dataKey="y" fill="#a1887f" />
+        <CartesianGrid stroke={CHART_CHROME.grid} vertical={false} />
+        <XAxis dataKey="x" stroke={CHART_CHROME.axis} tick={axisTick} />
+        <YAxis stroke={CHART_CHROME.axis} tick={axisTick} />
+        <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "var(--muted)" }} />
+        <Bar dataKey="y" fill={seriesColor(0)} radius={[4, 4, 0, 0]} />
       </BarChart>
     );
 
