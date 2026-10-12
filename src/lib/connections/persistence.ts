@@ -153,6 +153,29 @@ export async function getConnectionCredentials(
   return plainToCredentials(decryptSecret(rec.payload));
 }
 
+/** Merge credential fields without wiping unspecified values. */
+export async function mergeConnectionCredentials(
+  connectionId: string,
+  patch: Partial<ConnectionCredentials>,
+): Promise<ConnectionCredentials | undefined> {
+  const connection = await getConnection(connectionId);
+  if (!connection) return undefined;
+
+  const existing =
+    (await getConnectionCredentials(connectionId)) ??
+    ({ auth: connection.auth } satisfies ConnectionCredentials);
+
+  const next: ConnectionCredentials = { ...existing };
+  for (const [key, value] of Object.entries(patch) as Array<
+    [keyof ConnectionCredentials, ConnectionCredentials[keyof ConnectionCredentials]]
+  >) {
+    if (value !== undefined) next[key] = value;
+  }
+  next.auth = connection.auth;
+  await saveConnectionCredentials(connectionId, next);
+  return next;
+}
+
 export async function listDatasets(): Promise<DatasetDefinition[]> {
   const store = await readJson<StoreFile<DatasetDefinition>>("datasets.json", {
     items: [],

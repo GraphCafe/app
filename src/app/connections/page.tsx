@@ -8,6 +8,7 @@ import { CafeShell } from "@/components/cafe/cafe-shell";
 import { DatasetRoastForm } from "@/components/cafe/dataset-roast-form";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { OAuthConnectPanel } from "@/components/cafe/oauth-connect-panel";
 import { describeAuth } from "@/lib/connections/auth-config";
 import type { ApiConnection } from "@/lib/connections/types";
 
@@ -83,6 +84,9 @@ export default function ConnectionsPage() {
                   <p className="text-xs text-muted-foreground">{describeAuth(c)}</p>
                 </div>
               </div>
+              {c.auth === "oauth2" ? (
+                <OAuthConnectPanel connectionId={c.id} compact />
+              ) : null}
               <DatasetRoastForm connection={c} />
             </li>
           ))}

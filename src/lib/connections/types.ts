@@ -27,7 +27,13 @@ export type ColumnSchema = {
  * `apiKeyQuery` covers APIs such as the U.S. EIA Open Data API that require the key as a
  * URL parameter (`?api_key=…`) instead of a header.
  */
-export type AuthKind = "none" | "apiKeyHeader" | "apiKeyQuery" | "bearer" | "basic";
+export type AuthKind =
+  | "none"
+  | "apiKeyHeader"
+  | "apiKeyQuery"
+  | "bearer"
+  | "basic"
+  | "oauth2";
 
 export const AUTH_KINDS: readonly AuthKind[] = [
   "none",
@@ -35,7 +41,13 @@ export const AUTH_KINDS: readonly AuthKind[] = [
   "apiKeyQuery",
   "bearer",
   "basic",
+  "oauth2",
 ] as const;
+
+/** How an OAuth2 access token is attached to proxied API requests. */
+export type OAuth2TokenDelivery = "authorizationHeader" | "queryParam";
+
+export const DEFAULT_OAUTH2_QUERY_PARAM = "access_token";
 
 export const DEFAULT_API_KEY_HEADER = "X-API-Key";
 export const DEFAULT_API_KEY_QUERY_PARAM = "api_key";
@@ -50,8 +62,40 @@ export type ApiConnection = {
   apiKeyHeader?: string;
   /** Query parameter name when auth is apiKeyQuery (default: api_key). */
   apiKeyQueryParam?: string;
+  /** OAuth2 authorization endpoint (auth code + PKCE). */
+  oauth2AuthorizationUrl?: string;
+  /** OAuth2 token endpoint (code exchange + refresh). */
+  oauth2TokenUrl?: string;
+  /** Public OAuth2 client identifier registered with the provider. */
+  oauth2ClientId?: string;
+  /** Space-separated scopes requested during authorize. */
+  oauth2Scopes?: string;
+  /** Send PKCE (`S256`) on the authorize + token exchange (default true). */
+  oauth2UsePkce?: boolean;
+  /** Where the access token is placed on proxied requests (default: Authorization header). */
+  oauth2TokenDelivery?: OAuth2TokenDelivery;
+  /** Query parameter name when oauth2TokenDelivery is queryParam. */
+  oauth2QueryParam?: string;
   createdAt: string;
   updatedAt: string;
+};
+
+/** OAuth2 token material stored encrypted with other connection credentials. */
+export type OAuth2CredentialState = {
+  oauth2ClientSecret?: string;
+  oauth2AccessToken?: string;
+  oauth2RefreshToken?: string;
+  /** ISO timestamp when the access token expires (if the provider returns `expires_in`). */
+  oauth2ExpiresAt?: string;
+  oauth2TokenType?: string;
+};
+
+export type OAuth2ConnectionStatus = {
+  configured: boolean;
+  connected: boolean;
+  expiresAt?: string;
+  /** True when the access token expires within the refresh buffer. */
+  expiresSoon?: boolean;
 };
 
 export type DatasetRequest = {
