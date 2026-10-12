@@ -1,0 +1,162 @@
+{
+  "origin": {
+    "version": 1,
+    "sessionId": "05d7803d-d298-4c2b-a90e-69be965818a8",
+    "model": "composer-2.5-fast",
+    "agent": "cursor",
+    "promptCount": 17,
+    "promptHash": "sha256:f6e3adb22ef7a855e276520b5da3e7116dc47c5a7154ef406525f8c50e00c13f",
+    "promptTextWithheld": true,
+    "prompts": [
+      {
+        "index": 0,
+        "promptHash": "sha256:c88306a029965dbb3aaf479c86fd9cf23332ac20f9883638a2389636804d6cd8",
+        "agent": "cursor",
+        "model": "composer-2.5-fast"
+      },
+      {
+        "index": 1,
+        "promptHash": "sha256:edd1551c15e8360870eb2a448293a9f965fa10cbce3399a0f175157df1b589b1",
+        "agent": "cursor",
+        "model": "composer-2.5-fast"
+      },
+      {
+        "index": 2,
+        "promptHash": "sha256:ef595a4babef4a9b7d00d31c28a3bfdc671a23a2e695b6464ce8b21973e52264",
+        "agent": "cursor",
+        "model": "composer-2.5-fast",
+        "files": [
+          ".dockerignore",
+          "Dockerfile",
+          "docker-entrypoint.sh",
+          "docs/DEPLOY-FLY.md",
+          "fly.toml",
+          "next.config.ts",
+          "src/lib/connections/persistence.ts"
+        ]
+      },
+      {
+        "index": 3,
+        "agent": "cursor",
+        "model": "composer-2.5-fast"
+      },
+      {
+        "index": 4,
+        "agent": "cursor",
+        "model": "composer-2.5-fast"
+      },
+      {
+        "index": 5,
+        "agent": "cursor",
+        "model": "composer-2.5-fast"
+      },
+      {
+        "index": 6,
+        "agent": "cursor",
+        "model": "composer-2.5-fast"
+      },
+      {
+        "index": 7,
+        "promptHash": "sha256:86d2c2e77aac58398521dade82bda8e9d4de9a5f99a38082bba3ed7d0a2f2112",
+        "agent": "cursor",
+        "model": "composer-2.5-fast"
+      },
+      {
+        "index": 8,
+        "agent": "cursor",
+        "model": "composer-2.5-fast"
+      },
+      {
+        "index": 9,
+        "agent": "cursor",
+        "model": "composer-2.5-fast",
+        "files": [
+          ".gitattributes",
+          "Dockerfile",
+          "docs/DEPLOY-FLY.md"
+        ],
+        "treeSha": "2d26a38aef16194de862e532f8f41d596e841dd6"
+      },
+      {
+        "index": 10,
+        "promptHash": "sha256:1aadaaaf68b033d0a15cd06650f623a831b78885eec50fd3d42555735ad4d350",
+        "agent": "cursor",
+        "model": "composer-2.5-fast"
+      },
+      {
+        "index": 11,
+        "agent": "cursor",
+        "model": "composer-2.5-fast"
+      },
+      {
+        "index": 12,
+        "promptHash": "sha256:1382ba05cab1a9c40ea38471d3633e89ecceb3d15490cab9bb5f77ac5143611f",
+        "agent": "cursor",
+        "model": "composer-2.5-fast"
+      },
+      {
+        "index": 13,
+        "promptHash": "sha256:f6e3adb22ef7a855e276520b5da3e7116dc47c5a7154ef406525f8c50e00c13f",
+        "agent": "cursor",
+        "model": "composer-2.5-fast",
+        "treeSha": "2d26a38aef16194de862e532f8f41d596e841dd6"
+      },
+      {
+        "index": 14,
+        "promptHash": "sha256:f8338e66a6f2cd65677de3134b37571ef79d990c36f490d258858c29d086001d",
+        "agent": "cursor",
+        "model": "composer-2.5-fast"
+      },
+      {
+        "index": 15,
+        "promptHash": "sha256:39577a18b347900332676104fc8f673a876760c216ee31efa1896c27774902c7",
+        "agent": "cursor",
+        "model": "composer-2.5-fast",
+        "files": [
+          ".github/workflows/fly-deploy.yml"
+        ]
+      },
+      {
+        "index": 16,
+        "promptHash": "sha256:f6e3adb22ef7a855e276520b5da3e7116dc47c5a7154ef406525f8c50e00c13f",
+        "agent": "cursor",
+        "model": "composer-2.5-fast"
+      }
+    ],
+    "durationMs": 6648767,
+    "linesAdded": 62,
+    "linesRemoved": 2,
+    "originUrl": "https://getorigin.io/sessions/05d7803d-d298-4c2b-a90e-69be965818a8",
+    "timestamp": "2026-10-12T03:28:29.316Z"
+  },
+  "attribution_record": {
+    "schema_version": "1.0",
+    "revision": {
+      "vcs": "git",
+      "id": "3925b11110329eca756c8af58a8bff9966558479"
+    },
+    "attribution_level": "commit",
+    "recorded_at": "2026-10-12T03:28:29.316Z",
+    "producer": {
+      "name": "origin-cli",
+      "version": "0.20261003.2355"
+    },
+    "contributions": [
+      {
+        "evidence": "session_capture",
+        "agent": {
+          "id": "cursor"
+        },
+        "model": {
+          "id": "composer-2.5-fast"
+        },
+        "session": {
+          "id": "05d7803d-d298-4c2b-a90e-69be965818a8",
+          "reference_uri": "https://getorigin.io/sessions/05d7803d-d298-4c2b-a90e-69be965818a8",
+          "started_at": "2026-10-12T01:37:40.328Z",
+          "duration_ms": 6648988
+        }
+      }
+    ]
+  }
+}
