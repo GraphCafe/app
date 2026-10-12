@@ -1,6 +1,6 @@
 import type { ApiConnection } from "../types";
 import {
-  getConnection,
+  getConnectionById,
   getConnectionCredentials,
   mergeConnectionCredentials,
 } from "../persistence";
@@ -12,6 +12,7 @@ import { exchangeAuthorizationCode } from "./token-client";
 import { oauthRedirectUri } from "./public-url";
 
 export async function startOAuth2Authorization(input: {
+  userId: string;
   connectionId: string;
   request: Request;
   returnTo?: string;
@@ -19,8 +20,8 @@ export async function startOAuth2Authorization(input: {
   | { ok: true; authorizeUrl: string; state: string }
   | { ok: false; error: string; status?: number }
 > {
-  const connection = await getConnection(input.connectionId);
-  if (!connection) {
+  const connection = await getConnectionById(input.connectionId);
+  if (!connection || connection.userId !== input.userId) {
     return { ok: false, error: "Connection not found.", status: 404 };
   }
   const resolved = resolveOAuth2Config(connection);
@@ -32,6 +33,7 @@ export async function startOAuth2Authorization(input: {
   const codeVerifier = resolved.config.usePkce ? createCodeVerifier() : "";
   const returnTo = input.returnTo?.trim() || "/connections";
   const session = await createOAuthSession({
+    userId: input.userId,
     connectionId: connection.id,
     codeVerifier,
     usePkce: resolved.config.usePkce,
@@ -83,8 +85,8 @@ export async function completeOAuth2Callback(input: {
     };
   }
 
-  const connection = await getConnection(session.connectionId);
-  if (!connection) {
+  const connection = await getConnectionById(session.connectionId);
+  if (!connection || connection.userId !== session.userId) {
     return { ok: false, error: "Connection no longer exists.", status: 404 };
   }
   const resolved = resolveOAuth2Config(connection);

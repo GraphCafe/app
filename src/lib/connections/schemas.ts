@@ -149,6 +149,8 @@ export const oauthStartSchema = z.object({
  */
 export const connectionDiscoverSchema = z.object({
   url: z.string().url(),
+  /** When set, probe with this connection's auth scheme and stored credentials. */
+  connectionId: z.string().min(1).optional(),
   auth: authKindSchema.default("none"),
   ...credentialFields,
   /** Explicit base URL split, when the user already separated base and path. */

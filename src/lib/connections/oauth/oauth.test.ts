@@ -53,6 +53,7 @@ describe("OAuth2 authorize URL", () => {
 describe("OAuth2 connection config", () => {
   const base: ApiConnection = {
     id: "c1",
+    userId: "user-1",
     name: "OAuth test",
     baseUrl: "https://api.example.com",
     auth: "oauth2",
@@ -77,6 +78,7 @@ describe("OAuth2 status", () => {
   it("marks connected when an access token is stored", () => {
     const connection: ApiConnection = {
       id: "c1",
+      userId: "user-1",
       name: "OAuth",
       baseUrl: "https://api.example.com",
       auth: "oauth2",

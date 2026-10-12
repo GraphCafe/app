@@ -2,8 +2,14 @@ import { NextResponse } from "next/server";
 import { connectionTestSchema } from "@/lib/connections/schemas";
 import { executeProxyRequest } from "@/lib/connections/proxy";
 import type { ApiConnection } from "@/lib/connections/types";
+import {
+  isAuthError,
+  requireRequestUser,
+} from "@/lib/auth/require-user";
 
 export async function POST(request: Request) {
+  const user = await requireRequestUser();
+  if (isAuthError(user)) return user;
   const body = await request.json();
   const parsed = connectionTestSchema.safeParse(body);
   if (!parsed.success) {
@@ -40,6 +46,7 @@ export async function POST(request: Request) {
 
   const ephemeral: ApiConnection = {
     id: "test",
+    userId: user.id,
     name: "test",
     baseUrl,
     auth,

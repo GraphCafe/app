@@ -12,6 +12,7 @@ export default function HomePage() {
         </h1>
         <p className="text-muted-foreground">
           Connect an endpoint, explore the JSON as a table, and save a chart your team can read.
+          Sign in so your API keys and pours stay on this server between visits.
         </p>
         <div className="flex flex-wrap gap-2 pt-2">
           <Link href="/connections/new" className={cn(buttonVariants({ size: "lg" }))}>

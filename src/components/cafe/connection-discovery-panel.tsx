@@ -68,6 +68,7 @@ export function ConnectionDiscoveryPanel({
   showCredentialProbe = true,
   authContext,
   initialUrl,
+  connectionId,
 }: {
   onApply: (values: {
     name?: string;
@@ -87,6 +88,8 @@ export function ConnectionDiscoveryPanel({
   authContext?: AuthKind;
   /** Prefill the endpoint field (for example the connection base URL + path). */
   initialUrl?: string;
+  /** When set, discovery uses stored credentials from this connection on the server. */
+  connectionId?: string;
 }) {
   const [url, setUrl] = useState(initialUrl ?? "");
   const [secret, setSecret] = useState("");
@@ -117,9 +120,12 @@ export function ConnectionDiscoveryPanel({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           url: trimmed,
+          connectionId,
           // Probe with the discovered scheme on a second pass so the key lands in the right
           // place; the first pass is scheme-agnostic to learn what is being asked for.
-          auth: authContext ?? result?.suggested.auth ?? "none",
+          auth: connectionId
+            ? authContext ?? "none"
+            : authContext ?? result?.suggested.auth ?? "none",
           secret: probeSecret || undefined,
           apiKeyQueryParam: result?.suggested.apiKeyQueryParam,
           apiKeyHeader: result?.suggested.apiKeyHeader,
@@ -190,13 +196,13 @@ export function ConnectionDiscoveryPanel({
         </div>
       </div>
 
-      {showCredentialProbe ? null : (
+      {connectionId ? (
         <p className="flex items-start gap-2 text-xs text-muted-foreground">
           <KeyRound className="mt-0.5 size-3 shrink-0" />
-          This connection&apos;s stored credential is used, so its key never leaves the
-          server.
+          Analysis uses the credential saved in the <strong className="font-medium">Connection credential</strong>{" "}
+          section above (never sent back to the browser).
         </p>
-      )}
+      ) : null}
 
       <div className="space-y-2">
         <Label htmlFor="discover-url">API endpoint</Label>
@@ -314,21 +320,39 @@ export function ConnectionDiscoveryPanel({
           {awaitingCredential ? (
             <ol className="list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
               <li>{topHint.message}</li>
+              {connectionId ? (
+                <li>
+                  Open the <strong className="font-medium text-foreground">Connection credential</strong>{" "}
+                  section above, paste your{" "}
+                  {topHint.auth === "basic"
+                    ? "username and password"
+                    : topHint.auth === "bearer"
+                      ? "bearer token"
+                      : "API key"}
+                  , and press <strong className="font-medium text-foreground">Save credential</strong>.
+                </li>
+              ) : (
+                <li>
+                  Enter the credential in the field below
+                  {topHint.auth === "basic"
+                    ? " (username and password)"
+                    : topHint.auth === "bearer"
+                      ? " (bearer token)"
+                      : " (API key)"}
+                  .
+                </li>
+              )}
               <li>
-                Enter the credential above
-                {topHint.auth === "basic"
-                  ? " (username and password)"
-                  : topHint.auth === "bearer"
-                    ? " (bearer token)"
-                    : " (API key)"}
-                .
+                Press <strong className="font-medium text-foreground">Analyse endpoint</strong> again
+                {connectionId
+                  ? " after saving."
+                  : " — or use Re-analyse with credential once the key is filled in."}
               </li>
-              <li>
-                Press <strong className="font-medium text-foreground">Re-analyse with credential</strong>{" "}
-                or <strong className="font-medium text-foreground">Analyse endpoint</strong> again —
-                we will send it the way this API expects.
-              </li>
-              <li>Press Use these settings, then save the connection.</li>
+              {!connectionId ? (
+                <li>Press Use these settings, then save the connection.</li>
+              ) : (
+                <li>Press Use these settings to copy the detected path and rowsPath.</li>
+              )}
             </ol>
           ) : null}
 

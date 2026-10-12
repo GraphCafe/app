@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import {
+  isAuthError,
+  requireRequestUser,
+} from "@/lib/auth/require-user";
+import {
   getConnection,
   getConnectionCredentials,
 } from "@/lib/connections/persistence";
@@ -14,8 +18,11 @@ type Params = { params: Promise<{ connectionId: string }> };
  * Non-secret OAuth connection state for the UI (never returns tokens).
  */
 export async function GET(request: Request, { params }: Params) {
+  const auth = await requireRequestUser();
+  if (isAuthError(auth)) return auth;
+
   const { connectionId } = await params;
-  const connection = await getConnection(connectionId);
+  const connection = await getConnection(connectionId, auth.id);
   if (!connection) {
     return NextResponse.json({ error: "Connection not found." }, { status: 404 });
   }

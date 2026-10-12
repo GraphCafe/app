@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import { oauthStartSchema } from "@/lib/connections/schemas";
+import {
+  isAuthError,
+  requireRequestUser,
+} from "@/lib/auth/require-user";
 import { startOAuth2Authorization } from "@/lib/connections/oauth/flow";
 import { oauthRedirectUri } from "@/lib/connections/oauth/public-url";
 
@@ -9,6 +13,9 @@ import { oauthRedirectUri } from "@/lib/connections/oauth/public-url";
  * Begin the OAuth2 authorization-code (+ PKCE) flow for a saved connection.
  */
 export async function POST(request: Request) {
+  const auth = await requireRequestUser();
+  if (isAuthError(auth)) return auth;
+
   let body: unknown;
   try {
     body = await request.json();
@@ -25,6 +32,7 @@ export async function POST(request: Request) {
   }
 
   const result = await startOAuth2Authorization({
+    userId: auth.id,
     connectionId: parsed.data.connectionId,
     request,
     returnTo: parsed.data.returnTo,

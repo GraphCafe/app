@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { GraphCafeMark } from "@/components/brand/graph-cafe-mark";
 import { ShellNav } from "@/components/cafe/shell-nav";
+import { AuthUserMenu } from "@/components/cafe/auth-user-menu";
 import { ThemeToggle } from "@/components/cafe/theme-toggle";
 
 const links = [
@@ -26,8 +27,9 @@ export function CafeShell({
             <GraphCafeMark size={32} />
             <span className="font-heading text-[21px] font-medium leading-none">Graph.Cafe</span>
           </Link>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-end gap-3 sm:gap-4">
             <ShellNav links={links} />
+            <AuthUserMenu />
             <ThemeToggle />
           </div>
         </div>

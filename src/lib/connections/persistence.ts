@@ -1,7 +1,12 @@
-import { mkdir, readFile, writeFile } from "fs/promises";
-import path from "path";
+import { readFile, writeFile } from "fs/promises";
 import { randomUUID } from "crypto";
-import { decryptSecret, encryptSecret } from "./crypto";
+import { encryptSecret, tryDecryptSecret } from "./crypto";
+import {
+  ensureGraphCafeDataDir,
+  graphCafeDataDir,
+  storeFilePath,
+  type StoreFileName,
+} from "./storage-paths";
 import type {
   ApiConnection,
   DatasetDefinition,
@@ -9,14 +14,59 @@ import type {
 } from "./types";
 import { GRAPH_CAFE_REPORT_VERSION } from "./types";
 import type { ConnectionCredentials } from "./schemas";
+import { getRegisteredUserCount } from "@/lib/auth/store";
 
-export function graphCafeDataDir(): string {
-  const override = process.env.GRAPH_CAFE_DATA_DIR?.trim();
-  if (override) return path.resolve(override);
-  return path.join(process.cwd(), ".data", "graph-cafe");
+export { graphCafeDataDir };
+
+type WithOptionalUserId = { userId?: string };
+
+function isMissingUserId(item: WithOptionalUserId): boolean {
+  return !item.userId?.trim();
 }
 
-const DATA_DIR = graphCafeDataDir();
+/**
+ * Pre-account JSON stores had no owner. When exactly one user exists, attach orphans to them
+ * so existing pours and secrets keep working after sign-up.
+ */
+export async function claimLegacyOrphansForUser(userId: string): Promise<void> {
+  if ((await getRegisteredUserCount()) !== 1) return;
+
+  const connStore = await readJson<StoreFile<ApiConnection>>("connections.json", {
+    items: [],
+  });
+  let connDirty = false;
+  for (const c of connStore.items) {
+    if (isMissingUserId(c)) {
+      c.userId = userId;
+      connDirty = true;
+    }
+  }
+  if (connDirty) await writeJson("connections.json", connStore);
+
+  const dsStore = await readJson<StoreFile<DatasetDefinition>>("datasets.json", {
+    items: [],
+  });
+  let dsDirty = false;
+  for (const d of dsStore.items) {
+    if (isMissingUserId(d)) {
+      d.userId = userId;
+      dsDirty = true;
+    }
+  }
+  if (dsDirty) await writeJson("datasets.json", dsStore);
+
+  const repStore = await readJson<StoreFile<ReportDefinition>>("reports.json", {
+    items: [],
+  });
+  let repDirty = false;
+  for (const r of repStore.items) {
+    if (isMissingUserId(r)) {
+      r.userId = userId;
+      repDirty = true;
+    }
+  }
+  if (repDirty) await writeJson("reports.json", repStore);
+}
 
 type StoreFile<T> = { items: T[] };
 
@@ -25,23 +75,19 @@ type SecretRecord = {
   payload: string;
 };
 
-async function ensureDir() {
-  await mkdir(DATA_DIR, { recursive: true });
-}
-
-async function readJson<T>(file: string, fallback: T): Promise<T> {
-  await ensureDir();
+async function readJson<T>(file: StoreFileName, fallback: T): Promise<T> {
+  await ensureGraphCafeDataDir();
   try {
-    const raw = await readFile(path.join(DATA_DIR, file), "utf8");
+    const raw = await readFile(storeFilePath(file), "utf8");
     return JSON.parse(raw) as T;
   } catch {
     return fallback;
   }
 }
 
-async function writeJson<T>(file: string, data: T): Promise<void> {
-  await ensureDir();
-  await writeFile(path.join(DATA_DIR, file), JSON.stringify(data, null, 2));
+async function writeJson<T>(file: StoreFileName, data: T): Promise<void> {
+  await ensureGraphCafeDataDir();
+  await writeFile(storeFilePath(file), JSON.stringify(data, null, 2));
 }
 
 function credentialsToPlain(creds: ConnectionCredentials): string {
@@ -52,18 +98,31 @@ function plainToCredentials(plain: string): ConnectionCredentials {
   return JSON.parse(plain) as ConnectionCredentials;
 }
 
-export async function listConnections(): Promise<ApiConnection[]> {
+async function readAllConnections(): Promise<ApiConnection[]> {
   const store = await readJson<StoreFile<ApiConnection>>("connections.json", {
     items: [],
   });
   return store.items;
 }
 
-export async function getConnection(
+export async function listConnections(userId: string): Promise<ApiConnection[]> {
+  return (await readAllConnections()).filter((c) => c.userId === userId);
+}
+
+/** Server-only lookup (callers must enforce ownership). */
+export async function getConnectionById(
   id: string,
 ): Promise<ApiConnection | undefined> {
-  const items = await listConnections();
-  return items.find((c) => c.id === id);
+  return (await readAllConnections()).find((c) => c.id === id);
+}
+
+export async function getConnection(
+  id: string,
+  userId: string,
+): Promise<ApiConnection | undefined> {
+  const connection = await getConnectionById(id);
+  if (!connection || connection.userId !== userId) return undefined;
+  return connection;
 }
 
 export async function createConnection(
@@ -150,7 +209,22 @@ export async function getConnectionCredentials(
   });
   const rec = secrets.items.find((s) => s.connectionId === connectionId);
   if (!rec) return undefined;
-  return plainToCredentials(decryptSecret(rec.payload));
+  const plain = tryDecryptSecret(rec.payload);
+  if (!plain) return undefined;
+  return plainToCredentials(plain);
+}
+
+function syncCredentialMetadata(
+  connection: ApiConnection,
+  credentials: ConnectionCredentials,
+): ConnectionCredentials {
+  return {
+    ...credentials,
+    auth: connection.auth,
+    apiKeyHeader: connection.apiKeyHeader ?? credentials.apiKeyHeader,
+    apiKeyQueryParam:
+      connection.apiKeyQueryParam ?? credentials.apiKeyQueryParam,
+  };
 }
 
 /** Merge credential fields without wiping unspecified values. */
@@ -158,35 +232,35 @@ export async function mergeConnectionCredentials(
   connectionId: string,
   patch: Partial<ConnectionCredentials>,
 ): Promise<ConnectionCredentials | undefined> {
-  const connection = await getConnection(connectionId);
+  const connection = await getConnectionById(connectionId);
   if (!connection) return undefined;
 
   const existing =
     (await getConnectionCredentials(connectionId)) ??
     ({ auth: connection.auth } satisfies ConnectionCredentials);
 
-  const next: ConnectionCredentials = { ...existing };
-  for (const [key, value] of Object.entries(patch) as Array<
-    [keyof ConnectionCredentials, ConnectionCredentials[keyof ConnectionCredentials]]
-  >) {
-    if (value !== undefined) next[key] = value;
-  }
-  next.auth = connection.auth;
+  const next = syncCredentialMetadata(connection, {
+    ...existing,
+    ...patch,
+    auth: connection.auth,
+  });
   await saveConnectionCredentials(connectionId, next);
   return next;
 }
 
-export async function listDatasets(): Promise<DatasetDefinition[]> {
+export async function listDatasets(userId: string): Promise<DatasetDefinition[]> {
   const store = await readJson<StoreFile<DatasetDefinition>>("datasets.json", {
     items: [],
   });
-  return store.items;
+  return store.items.filter((d) => d.userId === userId);
 }
 
 export async function getDataset(
   id: string,
+  userId: string,
 ): Promise<DatasetDefinition | undefined> {
-  return (await listDatasets()).find((d) => d.id === id);
+  const dataset = (await listDatasets(userId)).find((d) => d.id === id);
+  return dataset;
 }
 
 export async function createDataset(
@@ -220,17 +294,18 @@ export async function updateDataset(
   return updated;
 }
 
-export async function listReports(): Promise<ReportDefinition[]> {
+export async function listReports(userId: string): Promise<ReportDefinition[]> {
   const store = await readJson<StoreFile<ReportDefinition>>("reports.json", {
     items: [],
   });
-  return store.items;
+  return store.items.filter((r) => r.userId === userId);
 }
 
 export async function getReport(
   id: string,
+  userId: string,
 ): Promise<ReportDefinition | undefined> {
-  return (await listReports()).find((r) => r.id === id);
+  return (await listReports(userId)).find((r) => r.id === id);
 }
 
 export async function saveReport(report: ReportDefinition): Promise<void> {
@@ -243,17 +318,17 @@ export async function saveReport(report: ReportDefinition): Promise<void> {
   await writeJson("reports.json", store);
 }
 
-export async function ensureDemoSeed(): Promise<{
+export async function ensureDemoSeed(userId: string): Promise<{
   connectionId: string;
   datasetId: string;
   reportId: string;
 } | null> {
-  const connections = await listConnections();
+  const connections = await listConnections(userId);
   const existing = connections.find((c) => c.name === "Demo — JSONPlaceholder");
   if (existing) {
-    const datasets = await listDatasets();
+    const datasets = await listDatasets(userId);
     const ds = datasets.find((d) => d.connectionId === existing.id);
-    const reports = await listReports();
+    const reports = await listReports(userId);
     const report = reports[0];
     if (ds && report) {
       return {
@@ -270,6 +345,7 @@ export async function ensureDemoSeed(): Promise<{
 
   const connection = await createConnection(
     {
+      userId,
       name: "Demo — JSONPlaceholder",
       baseUrl: "https://jsonplaceholder.typicode.com",
       auth: "none",
@@ -278,6 +354,7 @@ export async function ensureDemoSeed(): Promise<{
   );
 
   const dataset = await createDataset({
+    userId,
     connectionId: connection.id,
     name: "Posts roast",
     request: {
@@ -292,6 +369,7 @@ export async function ensureDemoSeed(): Promise<{
   const report: ReportDefinition = {
     version: GRAPH_CAFE_REPORT_VERSION,
     id: randomUUID(),
+    userId,
     name: "Morning tasting plate",
     description: "Sample table + chart from the demo API.",
     datasets: [dataset],

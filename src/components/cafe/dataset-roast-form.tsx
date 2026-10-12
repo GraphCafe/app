@@ -7,13 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ApiErrorAlert } from "@/components/cafe/api-error-alert";
+import { ConnectionCredentialsPanel } from "@/components/cafe/connection-credentials-panel";
 import { ConnectionDiscoveryPanel } from "@/components/cafe/connection-discovery-panel";
 import type { ApiConnection } from "@/lib/connections/types";
 
 export function DatasetRoastForm({
   connection,
 }: {
-  connection: Pick<ApiConnection, "id" | "baseUrl" | "auth">;
+  connection: ApiConnection;
 }) {
   const router = useRouter();
   const connectionId = connection.id;
@@ -55,9 +56,9 @@ export function DatasetRoastForm({
 
   return (
     <div className="mt-4 space-y-3">
+      <ConnectionCredentialsPanel connection={connection} />
       <ConnectionDiscoveryPanel
-        // The stored connection already settles the credential scheme, so discovery here is
-        // about the path and the rows, and the key stays on the server.
+        connectionId={connection.id}
         showCredentialProbe={false}
         authContext={connection.auth}
         initialUrl={`${connection.baseUrl.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`}

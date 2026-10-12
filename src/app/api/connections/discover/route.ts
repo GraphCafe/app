@@ -1,14 +1,26 @@
 import { NextResponse } from "next/server";
 import { connectionDiscoverSchema } from "@/lib/connections/schemas";
 import { discoverEndpoint } from "@/lib/connections/discovery";
+import {
+  isAuthError,
+  requireRequestUser,
+} from "@/lib/auth/require-user";
+import {
+  getConnection,
+  getConnectionCredentials,
+} from "@/lib/connections/persistence";
+import type { ConnectionCredentials } from "@/lib/connections/schemas";
 
 /**
  * POST /api/connections/discover
  *
  * Probes a URL and explains what it wants. The candidate credential is used for this one
- * request only; nothing is written to disk here.
+ * request only unless `connectionId` is set, in which case stored credentials are merged in.
  */
 export async function POST(request: Request) {
+  const auth = await requireRequestUser();
+  if (isAuthError(auth)) return auth;
+
   let body: unknown;
   try {
     body = await request.json();
@@ -26,7 +38,8 @@ export async function POST(request: Request) {
 
   const {
     url,
-    auth,
+    connectionId,
+    auth: requestedAuth,
     apiKeyHeader,
     apiKeyQueryParam,
     secret,
@@ -35,19 +48,44 @@ export async function POST(request: Request) {
     baseUrl,
   } = parsed.data;
 
+  let authKind = requestedAuth;
+  let credentials: ConnectionCredentials = {
+    auth: authKind,
+    apiKeyHeader,
+    apiKeyQueryParam,
+    secret,
+    basicUsername,
+    basicPassword,
+  };
+
+  if (connectionId) {
+    const connection = await getConnection(connectionId, auth.id);
+    if (!connection) {
+      return NextResponse.json({ error: "Connection not found." }, { status: 404 });
+    }
+    const stored = await getConnectionCredentials(connectionId);
+    authKind = connection.auth;
+    credentials = {
+      auth: connection.auth,
+      apiKeyHeader: connection.apiKeyHeader ?? stored?.apiKeyHeader,
+      apiKeyQueryParam: connection.apiKeyQueryParam ?? stored?.apiKeyQueryParam,
+      secret: secret ?? stored?.secret,
+      basicUsername: basicUsername ?? stored?.basicUsername,
+      basicPassword: basicPassword ?? stored?.basicPassword,
+      oauth2ClientSecret: stored?.oauth2ClientSecret,
+      oauth2AccessToken: stored?.oauth2AccessToken,
+      oauth2RefreshToken: stored?.oauth2RefreshToken,
+      oauth2ExpiresAt: stored?.oauth2ExpiresAt,
+      oauth2TokenType: stored?.oauth2TokenType,
+    };
+  }
+
   try {
     const result = await discoverEndpoint({
       url,
-      auth,
+      auth: authKind,
       baseUrl,
-      credentials: {
-        auth,
-        apiKeyHeader,
-        apiKeyQueryParam,
-        secret,
-        basicUsername,
-        basicPassword,
-      },
+      credentials,
     });
     return NextResponse.json(result);
   } catch (err) {

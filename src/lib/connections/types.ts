@@ -6,6 +6,7 @@
 export const GRAPH_CAFE_REPORT_VERSION = "graphCafe.report.v1" as const;
 
 export type ConnectionId = string;
+export type UserId = string;
 export type DatasetId = string;
 export type ReportId = string;
 export type WidgetId = string;
@@ -55,6 +56,8 @@ export const DEFAULT_API_KEY_QUERY_PARAM = "api_key";
 /** Stored server-side; referenced by id from datasets. */
 export type ApiConnection = {
   id: ConnectionId;
+  /** Owner of this pour; credentials and datasets are scoped to the same user. */
+  userId: UserId;
   name: string;
   baseUrl: string;
   auth: AuthKind;
@@ -111,6 +114,7 @@ export type DatasetRequest = {
 
 export type DatasetDefinition = {
   id: DatasetId;
+  userId: UserId;
   connectionId: ConnectionId;
   name: string;
   request: DatasetRequest;
@@ -175,6 +179,7 @@ export type ReportLayout = {
 export type ReportDefinition = {
   version: typeof GRAPH_CAFE_REPORT_VERSION;
   id: ReportId;
+  userId: UserId;
   name: string;
   description?: string;
   datasets: DatasetDefinition[];

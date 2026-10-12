@@ -1,13 +1,16 @@
-import { mkdir, readFile, writeFile } from "fs/promises";
-import path from "path";
+import { readFile, writeFile } from "fs/promises";
 import { randomUUID } from "crypto";
-import { graphCafeDataDir } from "../persistence";
+import {
+  ensureGraphCafeDataDir,
+  storeFilePath,
+} from "../storage-paths";
 
 const SESSION_TTL_MS = 15 * 60 * 1000;
 
 export type OAuthPendingSession = {
   /** OAuth2 `state` parameter. */
   id: string;
+  userId: string;
   connectionId: string;
   codeVerifier: string;
   usePkce: boolean;
@@ -18,14 +21,10 @@ export type OAuthPendingSession = {
 
 type StoreFile = { items: OAuthPendingSession[] };
 
-function sessionsPath(): string {
-  return path.join(graphCafeDataDir(), "oauth-sessions.json");
-}
-
 async function readStore(): Promise<StoreFile> {
-  await mkdir(graphCafeDataDir(), { recursive: true });
+  await ensureGraphCafeDataDir();
   try {
-    const raw = await readFile(sessionsPath(), "utf8");
+    const raw = await readFile(storeFilePath("oauth-sessions.json"), "utf8");
     return JSON.parse(raw) as StoreFile;
   } catch {
     return { items: [] };
@@ -33,8 +32,11 @@ async function readStore(): Promise<StoreFile> {
 }
 
 async function writeStore(store: StoreFile): Promise<void> {
-  await mkdir(graphCafeDataDir(), { recursive: true });
-  await writeFile(sessionsPath(), JSON.stringify(store, null, 2));
+  await ensureGraphCafeDataDir();
+  await writeFile(
+    storeFilePath("oauth-sessions.json"),
+    JSON.stringify(store, null, 2),
+  );
 }
 
 function prune(store: StoreFile): OAuthPendingSession[] {
@@ -46,6 +48,7 @@ function prune(store: StoreFile): OAuthPendingSession[] {
 }
 
 export async function createOAuthSession(input: {
+  userId: string;
   connectionId: string;
   codeVerifier: string;
   usePkce: boolean;
@@ -55,6 +58,7 @@ export async function createOAuthSession(input: {
   const store = await readStore();
   const session: OAuthPendingSession = {
     id: randomUUID(),
+    userId: input.userId,
     connectionId: input.connectionId,
     codeVerifier: input.codeVerifier,
     usePkce: input.usePkce,

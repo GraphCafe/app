@@ -10,12 +10,14 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { OAuthConnectPanel } from "@/components/cafe/oauth-connect-panel";
 import { describeAuth } from "@/lib/connections/auth-config";
+import { SignInRequired } from "@/components/cafe/sign-in-required";
 import type { ApiConnection } from "@/lib/connections/types";
 
 export default function ConnectionsPage() {
   const [connections, setConnections] = useState<ApiConnection[]>([]);
   const [reportId, setReportId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [needsAuth, setNeedsAuth] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -23,6 +25,11 @@ export default function ConnectionsPage() {
         fetch("/api/connections"),
         fetch("/api/reports"),
       ]);
+      if (connRes.status === 401 || repRes.status === 401) {
+        setNeedsAuth(true);
+        setLoading(false);
+        return;
+      }
       const connData = await connRes.json();
       const repData = await repRes.json();
       setConnections(connData.connections ?? []);
@@ -52,7 +59,9 @@ export default function ConnectionsPage() {
           </Link>
         ) : null}
       </div>
-      {loading ? (
+      {needsAuth ? (
+        <SignInRequired nextPath="/connections" />
+      ) : loading ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="size-4 animate-spin" />
           Loading pours…
