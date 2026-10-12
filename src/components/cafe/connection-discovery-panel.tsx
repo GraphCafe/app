@@ -46,12 +46,28 @@ export const DISCOVERY_PRESETS: Array<{
     url: "https://jsonplaceholder.typicode.com/posts",
     note: "Open demo API, no key",
   },
+  {
+    label: "NASA Astronomy Picture (APOD)",
+    url: "https://api.nasa.gov/planetary/apod?count=2",
+    note: "Free DEMO_KEY as ?api_key=",
+  },
+  {
+    label: "PokéAPI species list",
+    url: "https://pokeapi.co/api/v2/pokemon?limit=5",
+    note: "Open demo API, no key",
+  },
+  {
+    label: "httpbin Bearer demo",
+    url: "https://httpbin.org/bearer",
+    note: "Paste any token after probing",
+  },
 ];
 
 export function ConnectionDiscoveryPanel({
   onApply,
   showCredentialProbe = true,
   authContext,
+  initialUrl,
 }: {
   onApply: (values: {
     name?: string;
@@ -62,14 +78,20 @@ export function ConnectionDiscoveryPanel({
     path: string;
     rowsPath?: string;
     secret?: string;
+    basicUsername?: string;
+    basicPassword?: string;
   }) => void;
   /** Hide the key field when the auth scheme is already settled elsewhere. */
   showCredentialProbe?: boolean;
   /** Scheme to probe with, when the connection already stores one. */
   authContext?: AuthKind;
+  /** Prefill the endpoint field (for example the connection base URL + path). */
+  initialUrl?: string;
 }) {
-  const [url, setUrl] = useState("");
+  const [url, setUrl] = useState(initialUrl ?? "");
   const [secret, setSecret] = useState("");
+  const [basicUsername, setBasicUsername] = useState("");
+  const [basicPassword, setBasicPassword] = useState("");
   const [discovering, setDiscovering] = useState(false);
   const [result, setResult] = useState<DiscoveryResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -100,6 +122,9 @@ export function ConnectionDiscoveryPanel({
           auth: authContext ?? result?.suggested.auth ?? "none",
           secret: probeSecret || undefined,
           apiKeyQueryParam: result?.suggested.apiKeyQueryParam,
+          apiKeyHeader: result?.suggested.apiKeyHeader,
+          basicUsername: basicUsername || undefined,
+          basicPassword: basicPassword || undefined,
         }),
       });
       const data = await res.json();
@@ -132,6 +157,8 @@ export function ConnectionDiscoveryPanel({
       rowsPath: result.suggested.rowsPath,
       // Carry the key the user already typed into the form they are about to fill.
       secret: secret || undefined,
+      basicUsername: basicUsername || undefined,
+      basicPassword: basicPassword || undefined,
     });
     setApplied(true);
   }
@@ -140,6 +167,13 @@ export function ConnectionDiscoveryPanel({
   const suggestedAuthHint = topHint
     ? AUTH_LABELS[topHint.auth]
     : undefined;
+  const needsBasicFields =
+    showCredentialProbe &&
+    (authContext === "basic" ||
+      result?.suggested.auth === "basic" ||
+      topHint?.auth === "basic");
+  const awaitingCredential =
+    result && !result.probe.ok && topHint && topHint.auth !== "none";
 
   return (
     <section className="space-y-4 rounded-lg border border-border bg-card p-5">
@@ -212,33 +246,62 @@ export function ConnectionDiscoveryPanel({
       </div>
 
       {showCredentialProbe ? (
-        <div className="space-y-2">
-          <Label htmlFor="discover-secret">
-            API key <span className="text-muted-foreground">(optional)</span>
-          </Label>
-          <div className="flex flex-wrap gap-2">
-            <Input
-              id="discover-secret"
-              className="min-w-[240px] flex-1"
-              type="password"
-              autoComplete="off"
-              placeholder="Paste the key to check the authenticated response too"
-              value={secret}
-              onChange={(e) => setSecret(e.target.value)}
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => discover(secret)}
-              disabled={discovering || !secret}
-            >
-              Re-analyse with key
-            </Button>
+        <div className="space-y-3">
+          {needsBasicFields ? (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="discover-basic-user">Basic auth username</Label>
+                <Input
+                  id="discover-basic-user"
+                  autoComplete="off"
+                  value={basicUsername}
+                  onChange={(e) => setBasicUsername(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="discover-basic-pass">Basic auth password</Label>
+                <Input
+                  id="discover-basic-pass"
+                  type="password"
+                  autoComplete="off"
+                  value={basicPassword}
+                  onChange={(e) => setBasicPassword(e.target.value)}
+                />
+              </div>
+            </div>
+          ) : null}
+          <div className="space-y-2">
+            <Label htmlFor="discover-secret">
+              API key or bearer token{" "}
+              <span className="text-muted-foreground">(optional)</span>
+            </Label>
+            <div className="flex flex-wrap gap-2">
+              <Input
+                id="discover-secret"
+                className="min-w-[240px] flex-1"
+                type="password"
+                autoComplete="off"
+                placeholder="Paste a key or token to verify the authenticated response"
+                value={secret}
+                onChange={(e) => setSecret(e.target.value)}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => discover(secret)}
+                disabled={
+                  discovering || (!secret && !(basicUsername && basicPassword))
+                }
+              >
+                Re-analyse with credential
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Used for this probe only. If the API refused the first request, we automatically
+              retry once with the scheme it asked for when you supply a credential here. Keys are
+              stored encrypted on the server once you save the connection.
+            </p>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Used for this probe only. It is stored encrypted, on the server, once you save the
-            connection.
-          </p>
         </div>
       ) : null}
 
@@ -247,6 +310,27 @@ export function ConnectionDiscoveryPanel({
       {result ? (
         <div className="space-y-4 rounded-lg border border-border bg-muted p-4">
           <ProbeSummary result={result} />
+
+          {awaitingCredential ? (
+            <ol className="list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
+              <li>{topHint.message}</li>
+              <li>
+                Enter the credential above
+                {topHint.auth === "basic"
+                  ? " (username and password)"
+                  : topHint.auth === "bearer"
+                    ? " (bearer token)"
+                    : " (API key)"}
+                .
+              </li>
+              <li>
+                Press <strong className="font-medium text-foreground">Re-analyse with credential</strong>{" "}
+                or <strong className="font-medium text-foreground">Analyse endpoint</strong> again —
+                we will send it the way this API expects.
+              </li>
+              <li>Press Use these settings, then save the connection.</li>
+            </ol>
+          ) : null}
 
           {topHint ? (
             <div className="flex items-start gap-2 rounded-md border border-border bg-card p-3">

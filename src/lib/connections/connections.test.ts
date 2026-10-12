@@ -12,7 +12,11 @@ import {
   inferRowsPath,
 } from "@/lib/connections/row-path";
 import { detectAuthHints, looksLikeApiErrorDocument } from "@/lib/connections/auth-hints";
-import { discoverEndpoint, suggestConnectionName } from "@/lib/connections/discovery";
+import {
+  discoverEndpoint,
+  pickCredentialRetryAuth,
+  suggestConnectionName,
+} from "@/lib/connections/discovery";
 import { describeAuth, resolveApiKeyQueryParam } from "@/lib/connections/auth-config";
 import {
   connectionCreateSchema,
@@ -420,6 +424,70 @@ describe("reading what an API wants for authentication", () => {
   });
 });
 
+describe("credential retry during discovery", () => {
+  it("retries with the hinted scheme when a secret was supplied under auth none", () => {
+    expect(
+      pickCredentialRetryAuth(
+        "none",
+        { auth: "none", secret: "unit-test-value" },
+        [
+          {
+            auth: "apiKeyQuery",
+            confidence: "high",
+            fieldName: "api_key",
+            location: "query",
+            message: "needs query key",
+          },
+        ],
+        false,
+      ),
+    ).toBe("apiKeyQuery");
+  });
+
+  it("does not retry when the probe already succeeded", () => {
+    expect(
+      pickCredentialRetryAuth("none", { auth: "none", secret: "x" }, [], true),
+    ).toBeUndefined();
+  });
+
+  it("requires basic username and password before retrying basic auth", () => {
+    expect(
+      pickCredentialRetryAuth(
+        "none",
+        { auth: "none", secret: "wrong-for-basic" },
+        [
+          {
+            auth: "basic",
+            confidence: "high",
+            location: "header",
+            message: "basic please",
+          },
+        ],
+        false,
+      ),
+    ).toBeUndefined();
+    expect(
+      pickCredentialRetryAuth(
+        "none",
+        {
+          auth: "none",
+          basicUsername: "user",
+          basicPassword: "pass",
+        },
+        [
+          {
+            auth: "basic",
+            confidence: "high",
+            location: "header",
+            message: "basic please",
+          },
+        ],
+        false,
+      ),
+    ).toBe("basic");
+  });
+});
+
 describe("guided discovery", () => {
   it("turns a 403 into a filled-in query-auth setup", async () => {
     vi.stubGlobal(
@@ -529,6 +597,29 @@ describe("guided discovery", () => {
     expect(calledUrl).toBe(
       "https://api.eia.gov/v2/electricity/retail-sales/data/?length=2",
     );
+  });
+
+  it("automatically re-probes with query auth when a key is supplied on the first pass", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockImplementationOnce(
+        async () => new Response(JSON.stringify(EIA_KEY_MISSING), { status: 403 }),
+      )
+      .mockImplementationOnce(
+        async () => new Response(JSON.stringify(EIA_DATA_RESPONSE), { status: 200 }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await discoverEndpoint({
+      url: "https://api.eia.gov/v2/electricity/retail-sales/data",
+      auth: "none",
+      credentials: { auth: "none", secret: "unit-test-value" },
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(result.probe.ok).toBe(true);
+    expect(result.suggested.auth).toBe("apiKeyQuery");
+    expect(result.warnings.join(" ")).toMatch(/Re-probed using/i);
   });
 
   it("never echoes the candidate secret back to the caller", async () => {

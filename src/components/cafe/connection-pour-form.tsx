@@ -35,6 +35,8 @@ type ApplyValues = {
   path: string;
   rowsPath?: string;
   secret?: string;
+  basicUsername?: string;
+  basicPassword?: string;
 };
 
 /**
@@ -89,6 +91,8 @@ export function ConnectionPourForm({
     if (values.apiKeyHeader) setApiKeyHeader(values.apiKeyHeader);
     if (values.apiKeyQueryParam) setApiKeyQueryParam(values.apiKeyQueryParam);
     if (values.secret) setSecret(values.secret);
+    if (values.basicUsername) setBasicUsername(values.basicUsername);
+    if (values.basicPassword) setBasicPassword(values.basicPassword);
     setTestResult(null);
     setSaveError(null);
     setStatus(

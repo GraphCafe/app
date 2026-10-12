@@ -39,6 +39,8 @@ const QUERY_KEY_NAMES = new Set([
   "key",
   "app_key",
   "appkey",
+  "appid",
+  "app_id",
   "access_key",
   "accesskey",
   "subscription-key",
