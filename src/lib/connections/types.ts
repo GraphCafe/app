@@ -21,7 +21,24 @@ export type ColumnSchema = {
   nullable?: boolean;
 };
 
-export type AuthKind = "none" | "apiKeyHeader" | "bearer" | "basic";
+/**
+ * How a connection authenticates.
+ *
+ * `apiKeyQuery` covers APIs such as the U.S. EIA Open Data API that require the key as a
+ * URL parameter (`?api_key=…`) instead of a header.
+ */
+export type AuthKind = "none" | "apiKeyHeader" | "apiKeyQuery" | "bearer" | "basic";
+
+export const AUTH_KINDS: readonly AuthKind[] = [
+  "none",
+  "apiKeyHeader",
+  "apiKeyQuery",
+  "bearer",
+  "basic",
+] as const;
+
+export const DEFAULT_API_KEY_HEADER = "X-API-Key";
+export const DEFAULT_API_KEY_QUERY_PARAM = "api_key";
 
 /** Stored server-side; referenced by id from datasets. */
 export type ApiConnection = {
@@ -31,6 +48,8 @@ export type ApiConnection = {
   auth: AuthKind;
   /** Header name when auth is apiKeyHeader (default: X-API-Key). */
   apiKeyHeader?: string;
+  /** Query parameter name when auth is apiKeyQuery (default: api_key). */
+  apiKeyQueryParam?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -131,3 +150,58 @@ export type ProxyExecuteRequest = {
 export type ProxyExecuteResponse =
   | { ok: true; status: number; data: unknown; dataset?: DatasetResult }
   | { ok: false; status?: number; error: string };
+
+/**
+ * Result of probing an endpoint before a connection is saved.
+ *
+ * `suggested` holds values the form can drop straight into its fields; `hints` explains why.
+ */
+export type DiscoveryResult = {
+  /** The URL actually requested. */
+  requestedUrl: string;
+  suggested: {
+    baseUrl: string;
+    path: string;
+    name?: string;
+    auth: AuthKind;
+    apiKeyHeader?: string;
+    apiKeyQueryParam?: string;
+    rowsPath?: string;
+  };
+  probe: {
+    ok: boolean;
+    status?: number;
+    durationMs: number;
+    contentType?: string;
+    truncated: boolean;
+    error?: string;
+    errorCode?: string;
+    errorMessage?: string;
+  };
+  authHints: AuthHint[];
+  /** Candidate `rowsPath` values, best first. */
+  rowPaths: RowPathSuggestion[];
+  /** Column names for the response, or for the first suggested row path. */
+  columns: string[];
+  /** Number of rows the suggested path yields. */
+  rowCount: number;
+  /** Trimmed JSON sample, for the preview pane. */
+  sample?: unknown;
+  /** True when the body looks like an error document rather than data. */
+  isErrorDocument: boolean;
+  warnings: string[];
+};
+
+export type AuthHint = {
+  auth: AuthKind;
+  confidence: "high" | "medium" | "low";
+  fieldName?: string;
+  location: "header" | "query" | "body" | "none";
+  message: string;
+};
+
+export type RowPathSuggestion = {
+  path: string;
+  rowCount: number;
+  columns: string[];
+};

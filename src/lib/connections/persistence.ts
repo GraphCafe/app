@@ -241,6 +241,10 @@ export async function ensureDemoSeed(): Promise<{
     }
   }
 
+  // Two near-simultaneous first requests both saw an empty store and each seeded a copy, so
+  // never seed a second demo alongside connections the user already has.
+  if (connections.length > 0) return null;
+
   const connection = await createConnection(
     {
       name: "Demo — JSONPlaceholder",

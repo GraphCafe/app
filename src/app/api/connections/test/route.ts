@@ -17,6 +17,7 @@ export async function POST(request: Request) {
     baseUrl,
     auth,
     apiKeyHeader,
+    apiKeyQueryParam,
     secret,
     basicUsername,
     basicPassword,
@@ -31,6 +32,7 @@ export async function POST(request: Request) {
     baseUrl,
     auth,
     apiKeyHeader,
+    apiKeyQueryParam,
     createdAt: "",
     updatedAt: "",
   };
@@ -40,6 +42,7 @@ export async function POST(request: Request) {
     credentials: {
       auth,
       apiKeyHeader,
+      apiKeyQueryParam,
       secret,
       basicUsername,
       basicPassword,

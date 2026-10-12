@@ -1,5 +1,6 @@
 export type {
   ApiConnection,
+  AuthHint,
   AuthKind,
   ChartEncoding,
   ChartKind,
@@ -11,6 +12,7 @@ export type {
   DatasetId,
   DatasetRequest,
   DatasetResult,
+  DiscoveryResult,
   HttpMethod,
   KpiWidget,
   ProxyExecuteRequest,
@@ -19,9 +21,15 @@ export type {
   ReportId,
   ReportLayout,
   ReportWidget,
+  RowPathSuggestion,
   TableWidget,
   TableWidgetConfig,
   WidgetId,
 } from "./types";
 
-export { GRAPH_CAFE_REPORT_VERSION } from "./types";
+export {
+  AUTH_KINDS,
+  DEFAULT_API_KEY_HEADER,
+  DEFAULT_API_KEY_QUERY_PARAM,
+  GRAPH_CAFE_REPORT_VERSION,
+} from "./types";

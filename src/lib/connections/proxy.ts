@@ -1,6 +1,7 @@
 import { assertSafeOutboundUrl } from "./ssrf";
-import { friendlyHttpError } from "./errors";
+import { formatUpstreamError } from "./errors";
 import { extractRows } from "./json-path";
+import { resolveApiKeyHeader, resolveApiKeyQueryParam } from "./auth-config";
 import {
   inferColumnsFromRows,
   normalizeRows,
@@ -23,6 +24,13 @@ export type ExecuteOptions = {
   includeDataset?: boolean;
 };
 
+/**
+ * Apply credentials to request headers.
+ *
+ * `apiKeyQuery` is handled by `buildAuthQuery` instead, because those APIs reject the key in
+ * a header — the EIA Open Data API answers `API_KEY_MISSING` when no `api_key` parameter is
+ * present, no matter what headers are sent.
+ */
 function buildAuthHeaders(
   connection: ApiConnection,
   credentials: ConnectionCredentials,
@@ -36,8 +44,7 @@ function buildAuthHeaders(
       break;
     case "apiKeyHeader":
       if (credentials.secret) {
-        const name = connection.apiKeyHeader ?? "X-API-Key";
-        headers[name] = credentials.secret;
+        headers[resolveApiKeyHeader(connection.apiKeyHeader)] = credentials.secret;
       }
       break;
     case "basic":
@@ -52,6 +59,15 @@ function buildAuthHeaders(
       break;
   }
   return headers;
+}
+
+/** Apply credentials that travel in the query string. */
+export function buildAuthQuery(
+  connection: Pick<ApiConnection, "auth" | "apiKeyQueryParam">,
+  credentials: ConnectionCredentials,
+): Record<string, string> {
+  if (connection.auth !== "apiKeyQuery" || !credentials.secret) return {};
+  return { [resolveApiKeyQueryParam(connection.apiKeyQueryParam)]: credentials.secret };
 }
 
 function joinUrl(baseUrl: string, path: string): string {
@@ -83,6 +99,11 @@ export async function executeProxyRequest(
     return { ok: false, error: ssrf.error };
   }
 
+  // Applied last so the stored credential always wins over a stale copy in the saved request.
+  for (const [k, v] of Object.entries(buildAuthQuery(connection, credentials))) {
+    target.searchParams.set(k, v);
+  }
+
   const headers: Record<string, string> = {
     Accept: "application/json",
     ...buildAuthHeaders(connection, credentials),
@@ -110,7 +131,7 @@ export async function executeProxyRequest(
       return {
         ok: false,
         status: res.status,
-        error: friendlyHttpError(res.status, text),
+        error: formatUpstreamError(res.status, text),
       };
     }
 

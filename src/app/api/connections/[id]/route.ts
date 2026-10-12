@@ -29,6 +29,7 @@ export async function PATCH(request: Request, { params }: Params) {
     baseUrl,
     auth,
     apiKeyHeader,
+    apiKeyQueryParam,
     secret,
     basicUsername,
     basicPassword,
@@ -47,6 +48,7 @@ export async function PATCH(request: Request, { params }: Params) {
       ? {
           auth: auth ?? existing.auth,
           apiKeyHeader: apiKeyHeader ?? existing.apiKeyHeader,
+          apiKeyQueryParam: apiKeyQueryParam ?? existing.apiKeyQueryParam,
           secret,
           basicUsername,
           basicPassword,
@@ -60,6 +62,7 @@ export async function PATCH(request: Request, { params }: Params) {
       ...(baseUrl !== undefined ? { baseUrl } : {}),
       ...(auth !== undefined ? { auth } : {}),
       ...(apiKeyHeader !== undefined ? { apiKeyHeader } : {}),
+      ...(apiKeyQueryParam !== undefined ? { apiKeyQueryParam } : {}),
     },
     credentials,
   );

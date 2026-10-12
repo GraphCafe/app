@@ -28,16 +28,18 @@ export async function POST(request: Request) {
     baseUrl,
     auth,
     apiKeyHeader,
+    apiKeyQueryParam,
     secret,
     basicUsername,
     basicPassword,
   } = parsed.data;
 
   const connection = await createConnection(
-    { name, baseUrl, auth, apiKeyHeader },
+    { name, baseUrl, auth, apiKeyHeader, apiKeyQueryParam },
     {
       auth,
       apiKeyHeader,
+      apiKeyQueryParam,
       secret,
       basicUsername,
       basicPassword,

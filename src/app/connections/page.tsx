@@ -8,6 +8,7 @@ import { CafeShell } from "@/components/cafe/cafe-shell";
 import { DatasetRoastForm } from "@/components/cafe/dataset-roast-form";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { describeAuth } from "@/lib/connections/auth-config";
 import type { ApiConnection } from "@/lib/connections/types";
 
 export default function ConnectionsPage() {
@@ -79,10 +80,10 @@ export default function ConnectionsPage() {
                     {c.name}
                   </h2>
                   <p className="text-sm text-muted-foreground">{c.baseUrl}</p>
-                  <p className="text-xs text-muted-foreground">Auth: {c.auth}</p>
+                  <p className="text-xs text-muted-foreground">{describeAuth(c)}</p>
                 </div>
               </div>
-              <DatasetRoastForm connectionId={c.id} />
+              <DatasetRoastForm connection={c} />
             </li>
           ))}
         </ul>

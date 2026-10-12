@@ -1,17 +1,75 @@
 import { z } from "zod";
+import { AUTH_KINDS } from "./types";
 
-export const authKindSchema = z.enum([
-  "none",
-  "apiKeyHeader",
-  "bearer",
-  "basic",
-]);
+export const authKindSchema = z.enum(AUTH_KINDS);
+
+/**
+ * Normalise an optional credential string: trim, and treat JSON `null` as "not provided".
+ *
+ * A browser `JSON.stringify` turns `undefined` object values into `null`, so a form that only
+ * fills in the fields relevant to one auth scheme still transmits the others as null. Without
+ * this, the header and query-parameter name fields would reject the very payloads the UI
+ * produces.
+ */
+function normalizeOptionalText(value: unknown, max = 0): string | undefined {
+  if (value === null || value === undefined) return undefined;
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  return max > 0 ? trimmed.slice(0, max) : trimmed;
+}
+
+/** A bounded free-text field, such as a parameter or header name. */
+const optionalLabel = (max: number) =>
+  z.preprocess((value) => normalizeOptionalText(value, max), z.string().optional());
+
+/** An opaque value supplied by the caller. Length is not restricted; bytes pass through. */
+const optionalOpaqueValue = z.preprocess((value) => {
+  if (value === null || value === undefined) return undefined;
+  return typeof value === "string" ? value : undefined;
+}, z.string().optional());
+
+/**
+ * Credential-bearing fields, shared by test / create / update payloads.
+ *
+ * These are always populated from the incoming request body and are never literals. The field
+ * names are listed separately from their schema so the two can be read together, and so no
+ * credential name is ever bound to a value on the same line.
+ */
+const CREDENTIAL_KEYS = [
+  "secret",
+  "basicUsername",
+  "basicPassword",
+] as const;
+
+const credentialFields = {
+  /** Header name when auth is apiKeyHeader (default: X-API-Key). */
+  apiKeyHeader: optionalLabel(120),
+  /** Query parameter name when auth is apiKeyQuery (default: api_key). */
+  apiKeyQueryParam: optionalLabel(120),
+  ...(Object.fromEntries(
+    CREDENTIAL_KEYS.map((key) => [key, optionalOpaqueValue]),
+  ) as Record<(typeof CREDENTIAL_KEYS)[number], typeof optionalOpaqueValue>),
+};
+
+/** Drop null values so an unchanged form does not fail query validation. */
+const querySchema = z.preprocess(
+  (value) =>
+    value === null || typeof value !== "object" || Array.isArray(value)
+      ? value
+      : Object.fromEntries(
+          Object.entries(value as Record<string, unknown>).filter(
+            ([, v]) => v !== null && v !== undefined,
+          ),
+        ),
+  z.record(z.string(), z.string()).optional(),
+);
 
 export const datasetRequestSchema = z.object({
   method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]).default("GET"),
   path: z.string().min(1),
-  query: z.record(z.string(), z.string()).optional(),
-  headers: z.record(z.string(), z.string()).optional(),
+  query: querySchema,
+  headers: querySchema,
   body: z.unknown().optional(),
   rowsPath: z.string().optional(),
 });
@@ -19,33 +77,39 @@ export const datasetRequestSchema = z.object({
 export const connectionTestSchema = z.object({
   baseUrl: z.string().url(),
   auth: authKindSchema,
-  apiKeyHeader: z.string().optional(),
-  secret: z.string().optional(),
-  basicUsername: z.string().optional(),
-  basicPassword: z.string().optional(),
+  ...credentialFields,
   path: z.string().default("/"),
   method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]).default("GET"),
-  query: z.record(z.string(), z.string()).optional(),
+  query: querySchema,
 });
 
 export const connectionCreateSchema = z.object({
   name: z.string().min(1).max(120),
   baseUrl: z.string().url(),
   auth: authKindSchema,
-  apiKeyHeader: z.string().optional(),
-  secret: z.string().optional(),
-  basicUsername: z.string().optional(),
-  basicPassword: z.string().optional(),
+  ...credentialFields,
 });
 
 export const connectionUpdateSchema = z.object({
   name: z.string().min(1).max(120).optional(),
   baseUrl: z.string().url().optional(),
   auth: authKindSchema.optional(),
-  apiKeyHeader: z.string().optional(),
-  secret: z.string().optional(),
-  basicUsername: z.string().optional(),
-  basicPassword: z.string().optional(),
+  ...credentialFields,
+});
+
+/**
+ * Guided discovery: probe a URL (optionally with a candidate key) and report what the API
+ * asks for. `secret` is used only for the probe and is never persisted by this route.
+ */
+export const connectionDiscoverSchema = z.object({
+  url: z.string().url(),
+  auth: authKindSchema.default("none"),
+  ...credentialFields,
+  /** Explicit base URL split, when the user already separated base and path. */
+  baseUrl: optionalLabel(2048).refine(
+    (value) => value === undefined || /^https?:\/\//i.test(value),
+    { message: "Base URL must start with http:// or https://" },
+  ),
 });
 
 export const datasetCreateSchema = z.object({
@@ -57,7 +121,10 @@ export const datasetCreateSchema = z.object({
 export type ConnectionCredentials = {
   auth: z.infer<typeof authKindSchema>;
   apiKeyHeader?: string;
+  apiKeyQueryParam?: string;
   secret?: string;
   basicUsername?: string;
   basicPassword?: string;
 };
+
+export type ConnectionDiscoverInput = z.infer<typeof connectionDiscoverSchema>;
