@@ -2,5 +2,9 @@
   "name": "Graph.Cafe",
   "install": "npm ci",
   "start": "bash .cursor/start-dev.sh",
-  "ports": [43127]
+  "ports": [
+    {
+      "port": 43127
+    }
+  ]
 }
