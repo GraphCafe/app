@@ -67,6 +67,15 @@ export async function createOAuthSession(input: {
   return session;
 }
 
+export async function deleteOAuthSessionsForConnection(
+  connectionId: string,
+): Promise<void> {
+  const store = await readStore();
+  const next = prune(store).filter((s) => s.connectionId !== connectionId);
+  if (next.length === store.items.length) return;
+  await writeStore({ items: next });
+}
+
 export async function consumeOAuthSession(
   state: string,
 ): Promise<OAuthPendingSession | undefined> {

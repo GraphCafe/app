@@ -2,10 +2,12 @@ import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
 import { decryptSecret, encryptSecret } from "./crypto";
+import { deleteOAuthSessionsForConnection } from "./oauth/session-store";
 import type {
   ApiConnection,
   DatasetDefinition,
   ReportDefinition,
+  WidgetId,
 } from "./types";
 import { GRAPH_CAFE_REPORT_VERSION } from "./types";
 import type { ConnectionCredentials } from "./schemas";
@@ -122,6 +124,46 @@ export async function deleteConnection(id: string): Promise<boolean> {
   });
   secrets.items = secrets.items.filter((s) => s.connectionId !== id);
   await writeJson("secrets.json", secrets);
+  await deleteOAuthSessionsForConnection(id);
+
+  const datasetStore = await readJson<StoreFile<DatasetDefinition>>(
+    "datasets.json",
+    { items: [] },
+  );
+  datasetStore.items = datasetStore.items.filter((d) => d.connectionId !== id);
+  await writeJson("datasets.json", datasetStore);
+
+  const reportStore = await readJson<StoreFile<ReportDefinition>>(
+    "reports.json",
+    { items: [] },
+  );
+  let reportsChanged = false;
+  for (const report of reportStore.items) {
+    const datasets = report.datasets.filter((d) => d.connectionId !== id);
+    const datasetIds = new Set(datasets.map((d) => d.id));
+    const widgets = report.widgets.filter((w) => datasetIds.has(w.datasetId));
+    const widgetIds = new Set(widgets.map((w) => w.id));
+    const placement: ReportDefinition["layout"]["placement"] = {};
+    for (const [widgetId, cell] of Object.entries(report.layout.placement)) {
+      if (widgetIds.has(widgetId as WidgetId)) {
+        placement[widgetId as WidgetId] = cell;
+      }
+    }
+    if (
+      datasets.length !== report.datasets.length ||
+      widgets.length !== report.widgets.length
+    ) {
+      reportsChanged = true;
+      report.datasets = datasets;
+      report.widgets = widgets;
+      report.layout = { ...report.layout, placement };
+      report.updatedAt = new Date().toISOString();
+    }
+  }
+  if (reportsChanged) {
+    await writeJson("reports.json", reportStore);
+  }
+
   return true;
 }
 
