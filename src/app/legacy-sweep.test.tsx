@@ -3,7 +3,10 @@ import { join } from "node:path";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("next/navigation", () => ({ usePathname: () => "/connections" }));
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/connections",
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+}));
 
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
@@ -55,7 +58,22 @@ describe("connections empty state", () => {
   });
 
   it("invites the first connection with the mark, a title, and one action", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => new Response("[]", { headers: { "content-type": "application/json" } })));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = typeof input === "string" ? input : input.toString();
+        if (url.includes("/api/auth/me")) {
+          return Response.json({ user: { id: "test-user", email: "test@graph.cafe" } });
+        }
+        if (url.includes("/api/connections")) {
+          return Response.json({ connections: [] });
+        }
+        if (url.includes("/api/reports")) {
+          return Response.json({ reports: [] });
+        }
+        return Response.json({});
+      }),
+    );
     const { default: ConnectionsPage } = await import("./connections/page");
     render(<ConnectionsPage />);
     expect(await screen.findByText("Pour your first connection")).toBeTruthy();
