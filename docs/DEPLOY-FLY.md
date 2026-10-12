@@ -36,7 +36,7 @@ Install the CLI if needed: [fly.io/docs/flyctl/install](https://fly.io/docs/flyc
 
    On macOS/Linux you can generate one with `openssl rand -base64 32`.
 
-5. **Deploy**:
+5. **Deploy** (manual) or push to `main` after [GitHub Actions](#github-actions) is configured:
 
    ```bash
    fly deploy
@@ -72,6 +72,24 @@ Install the CLI if needed: [fly.io/docs/flyctl/install](https://fly.io/docs/flyc
 - `fly.toml` — HTTP on 3000, health check on `/`, volume mount
 - `GRAPH_CAFE_DATA_DIR=/data` — connections, datasets, and reports persist on the volume
 
+## GitHub Actions
+
+Pushes to **`main`** run tests, lint, and build, then deploy with `.github/workflows/fly-deploy.yml`.
+
+One-time setup in GitHub (**Settings → Secrets and variables → Actions**):
+
+1. Create a Fly deploy token (scoped to this app):
+
+   ```bash
+   fly tokens create deploy -a graph-cafe
+   ```
+
+2. Add repository secret **`FLY_API_TOKEN`** with that token value.
+
+You can also run the workflow manually from the **Actions** tab (**Deploy to Fly.io → Run workflow**).
+
+`GRAPH_CAFE_SECRET_KEY` stays on Fly (`fly secrets set`); do not put it in GitHub unless you add an explicit step to sync secrets.
+
 ## Operations
 
 | Task | Command |
@@ -79,7 +97,7 @@ Install the CLI if needed: [fly.io/docs/flyctl/install](https://fly.io/docs/flyc
 | Logs | `fly logs` |
 | SSH | `fly ssh console` |
 | Secrets | `fly secrets list` |
-| Redeploy after git push | `fly deploy` |
+| Redeploy | push to `main`, or `fly deploy` locally |
 
 **Scaling:** keep **one machine** while using the file store. A Fly volume attaches to a single instance.
 
