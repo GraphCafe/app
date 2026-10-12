@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Background,
   BackgroundVariant,
@@ -44,10 +44,15 @@ function cloneTemplate(template: GraphTemplate): {
   };
 }
 
+const defaultTemplate = graphTemplates[1];
+const defaultGraph = cloneTemplate(defaultTemplate);
+
 function GraphStudioInner() {
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
-  const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>(defaultGraph.nodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(defaultGraph.edges);
+  const [activeTemplateId, setActiveTemplateId] = useState<string | null>(
+    defaultTemplate.id,
+  );
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -73,10 +78,6 @@ function GraphStudioInner() {
     },
     [setEdges, setNodes],
   );
-
-  useEffect(() => {
-    loadTemplate(graphTemplates[1]);
-  }, [loadTemplate]);
 
   const onConnect = useCallback(
     (connection: Connection) => {

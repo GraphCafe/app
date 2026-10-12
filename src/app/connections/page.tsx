@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import { GraphCafeMark } from "@/components/brand/graph-cafe-mark";
 import { CafeShell } from "@/components/cafe/cafe-shell";
 import { DatasetRoastForm } from "@/components/cafe/dataset-roast-form";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { ApiConnection } from "@/lib/connections/types";
 

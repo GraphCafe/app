@@ -35,49 +35,75 @@ type ExecuteResponse =
   | { ok: true; dataset?: DatasetResult }
   | { ok: false; error: string; status?: number };
 
+type ReportBundle = {
+  report: ReportDefinition | null;
+  datasets: Record<string, DatasetResult>;
+  errors: Record<string, string>;
+};
+
+async function fetchReportBundle(reportId: string): Promise<ReportBundle> {
+  const res = await fetch(`/api/reports/${reportId}`);
+  const data = await res.json();
+  if (!res.ok) {
+    return {
+      report: null,
+      datasets: {},
+      errors: { report: data.error ?? "Report not found." },
+    };
+  }
+  const r = data.report as ReportDefinition;
+  const next: Record<string, DatasetResult> = {};
+  const nextErrors: Record<string, string> = {};
+  for (const ds of r.datasets) {
+    const exec = await fetch(`/api/datasets/${ds.id}/execute`, {
+      method: "POST",
+    });
+    const payload = (await exec.json()) as ExecuteResponse;
+    if (payload.ok && payload.dataset) {
+      next[ds.id] = payload.dataset;
+    } else if (!payload.ok) {
+      nextErrors[ds.id] = payload.error;
+    }
+  }
+  return { report: r, datasets: next, errors: nextErrors };
+}
+
 export function ReportStudioClient({ reportId }: { reportId: string }) {
+  return <ReportStudioBody key={reportId} reportId={reportId} />;
+}
+
+function ReportStudioBody({ reportId }: { reportId: string }) {
   const [report, setReport] = useState<ReportDefinition | null>(null);
   const [datasets, setDatasets] = useState<Record<string, DatasetResult>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  async function loadData(refresh = false) {
-    if (refresh) setRefreshing(true);
-    else setLoading(true);
-    try {
-      const res = await fetch(`/api/reports/${reportId}`);
-      const data = await res.json();
-      if (!res.ok) {
-        setErrors({ report: data.error ?? "Report not found." });
-        return;
-      }
-      const r = data.report as ReportDefinition;
-      setReport(r);
-      const next: Record<string, DatasetResult> = {};
-      const nextErrors: Record<string, string> = {};
-      for (const ds of r.datasets) {
-        const exec = await fetch(`/api/datasets/${ds.id}/execute`, {
-          method: "POST",
-        });
-        const payload = (await exec.json()) as ExecuteResponse;
-        if (payload.ok && payload.dataset) {
-          next[ds.id] = payload.dataset;
-        } else if (!payload.ok) {
-          nextErrors[ds.id] = payload.error;
-        }
-      }
-      setDatasets(next);
-      setErrors(nextErrors);
-    } finally {
+  useEffect(() => {
+    let cancelled = false;
+    fetchReportBundle(reportId).then((bundle) => {
+      if (cancelled) return;
+      setReport(bundle.report);
+      setDatasets(bundle.datasets);
+      setErrors(bundle.errors);
       setLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [reportId]);
+
+  async function refreshData() {
+    setRefreshing(true);
+    try {
+      const bundle = await fetchReportBundle(reportId);
+      setReport(bundle.report);
+      setDatasets(bundle.datasets);
+      setErrors(bundle.errors);
+    } finally {
       setRefreshing(false);
     }
   }
-
-  useEffect(() => {
-    loadData();
-  }, [reportId]);
 
   if (loading) {
     return (
@@ -102,7 +128,7 @@ export function ReportStudioClient({ reportId }: { reportId: string }) {
           type="button"
           variant="secondary"
           size="sm"
-          onClick={() => loadData(true)}
+          onClick={() => refreshData()}
           disabled={refreshing}
         >
           {refreshing ? <Loader2 className="size-4 animate-spin" /> : null}
