@@ -40,8 +40,10 @@ connect through a header-based API-key setup.
    `https://api.eia.gov/v2/electricity/retail-sales/data/?length=5`, and press
    **Analyse endpoint**. Without a key the EIA API answers `403 API_KEY_MISSING`, and the panel
    will say so and suggest *API key in the query string*.
-4. Paste the key into the panel's **API key** field and press **Re-analyse with key** to confirm
-   the authenticated response and see the detected rows path.
+4. Paste the key into the panel's **API key or bearer token** field and press **Re-analyse with
+   credential** (or **Analyse endpoint** again). Discovery automatically retries once with the
+   scheme the API asked for, so you can confirm the authenticated response and see the detected
+   `rowsPath`.
 5. Press **Use these settings**, name the pour, then **Save connection**.
 
 Resulting values:

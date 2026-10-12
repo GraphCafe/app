@@ -60,6 +60,7 @@ export function DatasetRoastForm({
         // about the path and the rows, and the key stays on the server.
         showCredentialProbe={false}
         authContext={connection.auth}
+        initialUrl={`${connection.baseUrl.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`}
         onApply={(values) => {
           if (values.path) setPath(values.path);
           setRowsPath(values.rowsPath ?? "");

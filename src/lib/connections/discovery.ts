@@ -15,6 +15,7 @@ import { resolveApiKeyHeader, resolveApiKeyQueryParam } from "./auth-config";
 import type { ConnectionCredentials } from "./schemas";
 import type {
   ApiConnection,
+  AuthHint,
   AuthKind,
   DiscoveryResult,
   RowPathSuggestion,
@@ -123,23 +124,50 @@ export async function discoverEndpoint(
     }
   }
 
-  const { headers, authQuery } = probeAuth(auth, creds);
+  let authUsed = auth;
+  let credsUsed: ConnectionCredentials = creds;
 
-  const withAuth = appendQuery(probeTarget, authQuery);
-  if (withAuth) probeTarget = withAuth;
+  const runProbePass = async (
+    targetUrl: string,
+    passAuth: AuthKind,
+    passCreds: ConnectionCredentials,
+  ) => {
+    let target = targetUrl;
+    const { headers, authQuery } = probeAuth(passAuth, passCreds);
+    const withAuth = appendQuery(target, authQuery);
+    if (withAuth) target = withAuth;
+    const probe = await probeUrl(target, { headers, timeoutMs });
+    const authHints = detectAuthHints({
+      ok: probe.ok,
+      status: probe.status,
+      wwwAuthenticate: probe.wwwAuthenticate,
+      errorCode: probe.errorCode,
+      errorMessage: probe.errorMessage,
+      data: probe.data,
+      contentType: probe.contentType,
+      text: probe.text,
+    });
+    return { probe, authHints, requestedUrl: target };
+  };
 
-  const probe = await probeUrl(probeTarget, { headers, timeoutMs });
+  let { probe, authHints, requestedUrl: probedUrl } = await runProbePass(
+    probeTarget,
+    authUsed,
+    credsUsed,
+  );
 
-  const authHints = detectAuthHints({
-    ok: probe.ok,
-    status: probe.status,
-    wwwAuthenticate: probe.wwwAuthenticate,
-    errorCode: probe.errorCode,
-    errorMessage: probe.errorMessage,
-    data: probe.data,
-    contentType: probe.contentType,
-    text: probe.text,
-  });
+  const retryAuth = pickCredentialRetryAuth(authUsed, credsUsed, authHints, probe.ok);
+  if (retryAuth) {
+    credsUsed = enrichCredentialsForAuth(retryAuth, credsUsed, authHints);
+    authUsed = retryAuth;
+    const retried = await runProbePass(probeTarget, authUsed, credsUsed);
+    probe = retried.probe;
+    authHints = retried.authHints;
+    probedUrl = retried.requestedUrl;
+    warnings.push(
+      describeCredentialRetry(retryAuth, authHints),
+    );
+  }
 
   const rowPaths: RowPathSuggestion[] = probe.data
     ? findRowPathSuggestions(probe.data)
@@ -182,8 +210,8 @@ export async function discoverEndpoint(
 
   // Nudge toward the scheme the API asked for when the chosen one clearly failed.
   const suggestedAuth: AuthKind = probe.ok
-    ? auth
-    : authHints[0]?.auth ?? auth;
+    ? authUsed
+    : authHints[0]?.auth ?? authUsed;
 
   const suggestedApiKeyHeader = fieldNameFor(authHints, "apiKeyHeader");
   const suggestedApiKeyQueryParam = fieldNameFor(authHints, "apiKeyQuery");
@@ -193,7 +221,7 @@ export async function discoverEndpoint(
   }
 
   return {
-    requestedUrl: redactSecret(probeTarget, creds.secret),
+    requestedUrl: redactSecret(probedUrl, credsUsed.secret),
     suggested: {
       baseUrl,
       path,
@@ -244,6 +272,62 @@ export function redactSecret(value: string, secret?: string): string {
     if (variant) out = out.split(variant).join("YOUR_API_KEY");
   }
   return out;
+}
+
+function hasProbeCredentials(creds: ConnectionCredentials): boolean {
+  if (creds.secret?.trim()) return true;
+  return Boolean(creds.basicUsername?.trim() && creds.basicPassword);
+}
+
+/** One follow-up probe when the caller supplied credentials under the wrong scheme. */
+export function pickCredentialRetryAuth(
+  authUsed: AuthKind,
+  creds: ConnectionCredentials,
+  hints: AuthHint[],
+  probeOk: boolean,
+): AuthKind | undefined {
+  if (probeOk || !hasProbeCredentials(creds)) return undefined;
+  const top = hints.find((h) => h.auth !== "none");
+  if (!top || top.auth === authUsed) return undefined;
+  if (top.auth === "basic") {
+    if (!creds.basicUsername?.trim() || !creds.basicPassword) return undefined;
+    return "basic";
+  }
+  if (!creds.secret?.trim()) return undefined;
+  return top.auth;
+}
+
+function enrichCredentialsForAuth(
+  auth: AuthKind,
+  creds: ConnectionCredentials,
+  hints: AuthHint[],
+): ConnectionCredentials {
+  const next: ConnectionCredentials = { ...creds, auth };
+  const hintField = hints.find((h) => h.auth === auth && h.fieldName)?.fieldName;
+  if (auth === "apiKeyHeader" && hintField) {
+    next.apiKeyHeader = resolveApiKeyHeader(hintField);
+  }
+  if (auth === "apiKeyQuery" && hintField) {
+    next.apiKeyQueryParam = resolveApiKeyQueryParam(hintField);
+  }
+  return next;
+}
+
+function describeCredentialRetry(auth: AuthKind, hints: AuthHint[]): string {
+  const hint = hints.find((h) => h.auth === auth);
+  const label =
+    auth === "bearer"
+      ? "Bearer token"
+      : auth === "apiKeyHeader"
+        ? "API key in a header"
+        : auth === "apiKeyQuery"
+          ? "API key in the query string"
+          : auth === "basic"
+            ? "Basic auth"
+            : "no auth";
+  return hint
+    ? `Re-probed using ${label} because you supplied a credential — ${hint.message}`
+    : `Re-probed using ${label} based on how the API refused the first request.`;
 }
 
 function fieldNameFor(
