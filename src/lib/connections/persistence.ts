@@ -10,7 +10,13 @@ import type {
 import { GRAPH_CAFE_REPORT_VERSION } from "./types";
 import type { ConnectionCredentials } from "./schemas";
 
-const DATA_DIR = path.join(process.cwd(), ".data", "graph-cafe");
+export function graphCafeDataDir(): string {
+  const override = process.env.GRAPH_CAFE_DATA_DIR?.trim();
+  if (override) return path.resolve(override);
+  return path.join(process.cwd(), ".data", "graph-cafe");
+}
+
+const DATA_DIR = graphCafeDataDir();
 
 type StoreFile<T> = { items: T[] };
 

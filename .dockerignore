@@ -1,0 +1,12 @@
+.git
+.cursor
+.data
+.next
+node_modules
+coverage
+*.md
+!README.md
+.env*
+Dockerfile
+fly.toml
+docs
