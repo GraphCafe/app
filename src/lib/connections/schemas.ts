@@ -40,7 +40,33 @@ const CREDENTIAL_KEYS = [
   "secret",
   "basicUsername",
   "basicPassword",
+  "oauth2ClientSecret",
+  "oauth2AccessToken",
+  "oauth2RefreshToken",
+  "oauth2ExpiresAt",
+  "oauth2TokenType",
 ] as const;
+
+const optionalUrl = z.preprocess(
+  (value) => normalizeOptionalText(value, 2048),
+  z.string().url().optional(),
+);
+
+const oauthConnectionFields = {
+  oauth2AuthorizationUrl: optionalUrl,
+  oauth2TokenUrl: optionalUrl,
+  oauth2ClientId: optionalLabel(512),
+  oauth2Scopes: optionalLabel(2048),
+  oauth2UsePkce: z.preprocess((value) => {
+    if (value === null || value === undefined) return undefined;
+    if (typeof value === "boolean") return value;
+    return undefined;
+  }, z.boolean().optional()),
+  oauth2TokenDelivery: z
+    .enum(["authorizationHeader", "queryParam"])
+    .optional(),
+  oauth2QueryParam: optionalLabel(120),
+};
 
 const credentialFields = {
   /** Header name when auth is apiKeyHeader (default: X-API-Key). */
@@ -50,6 +76,10 @@ const credentialFields = {
   ...(Object.fromEntries(
     CREDENTIAL_KEYS.map((key) => [key, optionalOpaqueValue]),
   ) as Record<(typeof CREDENTIAL_KEYS)[number], typeof optionalOpaqueValue>),
+};
+
+const connectionMetadataFields = {
+  ...oauthConnectionFields,
 };
 
 /** Drop null values so an unchanged form does not fail query validation. */
@@ -77,6 +107,7 @@ export const datasetRequestSchema = z.object({
 export const connectionTestSchema = z.object({
   baseUrl: z.string().url(),
   auth: authKindSchema,
+  ...connectionMetadataFields,
   ...credentialFields,
   path: z.string().default("/"),
   method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]).default("GET"),
@@ -87,6 +118,7 @@ export const connectionCreateSchema = z.object({
   name: z.string().min(1).max(120),
   baseUrl: z.string().url(),
   auth: authKindSchema,
+  ...connectionMetadataFields,
   ...credentialFields,
 });
 
@@ -94,7 +126,21 @@ export const connectionUpdateSchema = z.object({
   name: z.string().min(1).max(120).optional(),
   baseUrl: z.string().url().optional(),
   auth: authKindSchema.optional(),
+  ...connectionMetadataFields,
   ...credentialFields,
+});
+
+export const oauthStartSchema = z.object({
+  connectionId: z.string().min(1),
+  /** Path to return to after the provider redirects back (must start with `/`). */
+  returnTo: z
+    .string()
+    .optional()
+    .refine(
+      (value) =>
+        value === undefined || (value.startsWith("/") && !value.startsWith("//")),
+      { message: "returnTo must be a same-origin path." },
+    ),
 });
 
 /**
@@ -125,6 +171,13 @@ export type ConnectionCredentials = {
   secret?: string;
   basicUsername?: string;
   basicPassword?: string;
+  oauth2ClientSecret?: string;
+  oauth2AccessToken?: string;
+  oauth2RefreshToken?: string;
+  oauth2ExpiresAt?: string;
+  oauth2TokenType?: string;
 };
+
+export type OAuthStartInput = z.infer<typeof oauthStartSchema>;
 
 export type ConnectionDiscoverInput = z.infer<typeof connectionDiscoverSchema>;

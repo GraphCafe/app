@@ -26,8 +26,11 @@ Cloud Agent pushes use a GitHub PAT in **`GITHUB_TOKEN`** (preferred) or **`GH_T
 | API key in a header | A named header, default `X-API-Key` | Stripe-style and custom header APIs |
 | API key in the query string | `?<param>=…`, default `api_key` | **U.S. EIA Open Data**, many government APIs |
 | Basic auth | `Authorization: Basic …` | Legacy/internal APIs |
+| OAuth 2.0 | Browser authorize once; server stores access/refresh tokens | SaaS APIs with authorization-code + PKCE |
 
 Fields not relevant to the selected type are ignored, so switching types never sends a stale credential.
+
+OAuth setup details: [docs/OAUTH.md](docs/OAUTH.md).
 
 ## Connecting the U.S. EIA Open Data API
 
@@ -122,6 +125,9 @@ Local connection data lives under `.data/graph-cafe/` (gitignored).
 | `GET` / `PATCH` / `DELETE` | `/api/connections/[id]` | Connection CRUD |
 | `POST` | `/api/connections/test` | Ephemeral test (no save) |
 | `POST` | `/api/connections/discover` | Probe a URL and suggest auth, base URL, path, `rowsPath` |
+| `POST` | `/api/oauth/start` | Begin OAuth2 authorize redirect for a saved connection |
+| `GET` | `/api/oauth/callback` | OAuth2 provider redirect target (stores tokens) |
+| `GET` | `/api/oauth/status/[connectionId]` | OAuth connected/configured state (no secrets) |
 | `GET` / `POST` | `/api/datasets` | List / create datasets |
 | `GET` / `PATCH` | `/api/datasets/[id]` | Dataset read / update |
 | `POST` | `/api/datasets/[id]/execute` | Proxy execute + inferred table |

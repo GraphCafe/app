@@ -20,7 +20,8 @@ import {
   DEFAULT_API_KEY_HEADER,
   DEFAULT_API_KEY_QUERY_PARAM,
 } from "@/lib/connections/auth-config";
-import { AUTH_KINDS, type AuthKind } from "@/lib/connections/types";
+import { OAuthConnectPanel } from "@/components/cafe/oauth-connect-panel";
+import { DEFAULT_OAUTH2_QUERY_PARAM, AUTH_KINDS, type AuthKind } from "@/lib/connections/types";
 
 type TestResult =
   | { ok: true; status: number; data: unknown }
@@ -76,6 +77,19 @@ export function ConnectionPourForm({
   const [secret, setSecret] = useState("");
   const [basicUsername, setBasicUsername] = useState("");
   const [basicPassword, setBasicPassword] = useState("");
+  const [oauth2AuthorizationUrl, setOauth2AuthorizationUrl] = useState("");
+  const [oauth2TokenUrl, setOauth2TokenUrl] = useState("");
+  const [oauth2ClientId, setOauth2ClientId] = useState("");
+  const [oauth2ClientSecret, setOauth2ClientSecret] = useState("");
+  const [oauth2Scopes, setOauth2Scopes] = useState("");
+  const [oauth2UsePkce, setOauth2UsePkce] = useState(true);
+  const [oauth2TokenDelivery, setOauth2TokenDelivery] = useState<
+    "authorizationHeader" | "queryParam"
+  >("authorizationHeader");
+  const [oauth2QueryParam, setOauth2QueryParam] = useState(
+    DEFAULT_OAUTH2_QUERY_PARAM,
+  );
+  const [savedConnectionId, setSavedConnectionId] = useState<string | null>(null);
   const [testPath, setTestPath] = useState("/posts?_limit=3");
   const [testing, setTesting] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -113,9 +127,28 @@ export function ConnectionPourForm({
         return { secret: secret || undefined };
       case "basic":
         return { basicUsername, basicPassword };
+      case "oauth2":
+        return {
+          oauth2ClientSecret: oauth2ClientSecret || undefined,
+          oauth2AccessToken: secret || undefined,
+        };
       default:
         return {};
     }
+  }
+
+  function oauthMetadataPayload() {
+    if (auth !== "oauth2") return {};
+    return {
+      oauth2AuthorizationUrl: oauth2AuthorizationUrl || undefined,
+      oauth2TokenUrl: oauth2TokenUrl || undefined,
+      oauth2ClientId: oauth2ClientId || undefined,
+      oauth2Scopes: oauth2Scopes || undefined,
+      oauth2UsePkce,
+      oauth2TokenDelivery,
+      oauth2QueryParam:
+        oauth2TokenDelivery === "queryParam" ? oauth2QueryParam : undefined,
+    };
   }
 
   async function runTest() {
@@ -131,6 +164,7 @@ export function ConnectionPourForm({
         body: JSON.stringify({
           baseUrl,
           auth,
+          ...oauthMetadataPayload(),
           ...credentialPayload(),
           path,
           query,
@@ -160,6 +194,7 @@ export function ConnectionPourForm({
           name,
           baseUrl,
           auth,
+          ...oauthMetadataPayload(),
           ...credentialPayload(),
         }),
       });
@@ -168,7 +203,14 @@ export function ConnectionPourForm({
         setSaveError(data.error ? JSON.stringify(data.error) : "Could not save.");
         return;
       }
-      onSaved?.(data.connection.id);
+      setSavedConnectionId(data.connection.id);
+      if (auth === "oauth2") {
+        setStatus(
+          "Connection saved. Register the redirect URI below with your provider, then connect with OAuth.",
+        );
+      } else {
+        onSaved?.(data.connection.id);
+      }
     } catch {
       setSaveError("Network error while saving.");
     } finally {
@@ -275,6 +317,115 @@ export function ConnectionPourForm({
               />
             </div>
           ) : null}
+          {auth === "oauth2" ? (
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor="oauthAuthUrl">Authorization URL</Label>
+                <Input
+                  id="oauthAuthUrl"
+                  type="url"
+                  placeholder="https://provider.example.com/oauth/authorize"
+                  value={oauth2AuthorizationUrl}
+                  onChange={(e) => setOauth2AuthorizationUrl(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="oauthTokenUrl">Token URL</Label>
+                <Input
+                  id="oauthTokenUrl"
+                  type="url"
+                  placeholder="https://provider.example.com/oauth/token"
+                  value={oauth2TokenUrl}
+                  onChange={(e) => setOauth2TokenUrl(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="oauthClientId">Client ID</Label>
+                <Input
+                  id="oauthClientId"
+                  value={oauth2ClientId}
+                  onChange={(e) => setOauth2ClientId(e.target.value)}
+                  autoComplete="off"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="oauthClientSecret">Client secret</Label>
+                <Input
+                  id="oauthClientSecret"
+                  type="password"
+                  value={oauth2ClientSecret}
+                  onChange={(e) => setOauth2ClientSecret(e.target.value)}
+                  autoComplete="off"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Optional for public PKCE clients; required by many providers during token
+                  exchange.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="oauthScopes">Scopes</Label>
+                <Input
+                  id="oauthScopes"
+                  placeholder="read:data offline_access"
+                  value={oauth2Scopes}
+                  onChange={(e) => setOauth2Scopes(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <input
+                  id="oauthPkce"
+                  type="checkbox"
+                  checked={oauth2UsePkce}
+                  onChange={(e) => setOauth2UsePkce(e.target.checked)}
+                />
+                <Label htmlFor="oauthPkce" className="font-normal">
+                  Use PKCE (recommended)
+                </Label>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="oauthDelivery">Send access token via</Label>
+                <Select
+                  value={oauth2TokenDelivery}
+                  onValueChange={(v) =>
+                    setOauth2TokenDelivery(v as "authorizationHeader" | "queryParam")
+                  }
+                >
+                  <SelectTrigger id="oauthDelivery">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="authorizationHeader">
+                      Authorization header (Bearer)
+                    </SelectItem>
+                    <SelectItem value="queryParam">Query parameter</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {oauth2TokenDelivery === "queryParam" ? (
+                <div className="space-y-2">
+                  <Label htmlFor="oauthQueryParam">Query parameter name</Label>
+                  <Input
+                    id="oauthQueryParam"
+                    value={oauth2QueryParam}
+                    onChange={(e) => setOauth2QueryParam(e.target.value)}
+                  />
+                </div>
+              ) : null}
+              <div className="space-y-2">
+                <Label htmlFor="oauthTestToken">
+                  Access token <span className="text-muted-foreground">(optional test)</span>
+                </Label>
+                <Input
+                  id="oauthTestToken"
+                  type="password"
+                  value={secret}
+                  onChange={(e) => setSecret(e.target.value)}
+                  autoComplete="off"
+                  placeholder="Paste a token to test before running OAuth"
+                />
+              </div>
+            </div>
+          ) : null}
           {auth === "basic" ? (
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-2">
@@ -324,6 +475,18 @@ export function ConnectionPourForm({
             <p className="text-xs text-emerald-700 dark:text-emerald-400">{status}</p>
           ) : null}
           {saveError ? <ApiErrorAlert message={saveError} /> : null}
+          {savedConnectionId && auth === "oauth2" ? (
+            <div className="space-y-3">
+              <OAuthConnectPanel connectionId={savedConnectionId} />
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => onSaved?.(savedConnectionId)}
+              >
+                Done — back to connections
+              </Button>
+            </div>
+          ) : null}
           <p className="text-xs text-muted-foreground">
             Tokens stay on the server — they are never bundled into the browser app.
           </p>

@@ -2,6 +2,8 @@ import { assertSafeOutboundUrl } from "./ssrf";
 import { formatUpstreamError } from "./errors";
 import { extractRows } from "./json-path";
 import { resolveApiKeyHeader, resolveApiKeyQueryParam } from "./auth-config";
+import { resolveOAuth2QueryParam, resolveOAuth2TokenDelivery } from "./oauth/config";
+import { ensureOAuth2AccessToken } from "./oauth/tokens";
 import {
   inferColumnsFromRows,
   normalizeRows,
@@ -55,6 +57,14 @@ function buildAuthHeaders(
         headers.Authorization = `Basic ${token}`;
       }
       break;
+    case "oauth2": {
+      const access = credentials.oauth2AccessToken?.trim();
+      if (access) {
+        const tokenType = credentials.oauth2TokenType?.trim() || "Bearer";
+        headers.Authorization = `${tokenType} ${access}`;
+      }
+      break;
+    }
     default:
       break;
   }
@@ -63,11 +73,25 @@ function buildAuthHeaders(
 
 /** Apply credentials that travel in the query string. */
 export function buildAuthQuery(
-  connection: Pick<ApiConnection, "auth" | "apiKeyQueryParam">,
+  connection: Pick<
+    ApiConnection,
+    "auth" | "apiKeyQueryParam" | "oauth2QueryParam" | "oauth2TokenDelivery"
+  >,
   credentials: ConnectionCredentials,
 ): Record<string, string> {
-  if (connection.auth !== "apiKeyQuery" || !credentials.secret) return {};
-  return { [resolveApiKeyQueryParam(connection.apiKeyQueryParam)]: credentials.secret };
+  if (connection.auth === "apiKeyQuery" && credentials.secret) {
+    return { [resolveApiKeyQueryParam(connection.apiKeyQueryParam)]: credentials.secret };
+  }
+  if (
+    connection.auth === "oauth2" &&
+    resolveOAuth2TokenDelivery(connection) === "queryParam" &&
+    credentials.oauth2AccessToken?.trim()
+  ) {
+    return {
+      [resolveOAuth2QueryParam(connection)]: credentials.oauth2AccessToken.trim(),
+    };
+  }
+  return {};
 }
 
 function joinUrl(baseUrl: string, path: string): string {
@@ -79,7 +103,16 @@ function joinUrl(baseUrl: string, path: string): string {
 export async function executeProxyRequest(
   options: ExecuteOptions,
 ): Promise<ProxyExecuteResponse> {
-  const { connection, credentials, request, includeDataset } = options;
+  const { connection, request, includeDataset } = options;
+  let credentials = options.credentials;
+
+  if (connection.auth === "oauth2" && connection.id !== "test") {
+    const refreshed = await ensureOAuth2AccessToken(connection, credentials);
+    if (!refreshed.ok) {
+      return { ok: false, error: refreshed.error };
+    }
+    credentials = refreshed.credentials;
+  }
 
   let target: URL;
   try {
@@ -109,6 +142,13 @@ export async function executeProxyRequest(
     ...buildAuthHeaders(connection, credentials),
     ...(request.headers ?? {}),
   };
+
+  if (
+    connection.auth === "oauth2" &&
+    resolveOAuth2TokenDelivery(connection) === "queryParam"
+  ) {
+    delete headers.Authorization;
+  }
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);

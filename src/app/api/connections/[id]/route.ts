@@ -3,6 +3,7 @@ import { connectionUpdateSchema } from "@/lib/connections/schemas";
 import {
   deleteConnection,
   getConnection,
+  mergeConnectionCredentials,
   updateConnection,
 } from "@/lib/connections/persistence";
 
@@ -24,48 +25,58 @@ export async function PATCH(request: Request, { params }: Params) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
-  const {
-    name,
-    baseUrl,
-    auth,
-    apiKeyHeader,
-    apiKeyQueryParam,
-    secret,
-    basicUsername,
-    basicPassword,
-  } = parsed.data;
+  const data = parsed.data;
 
   const existing = await getConnection(id);
   if (!existing) {
     return NextResponse.json({ error: "Connection not found." }, { status: 404 });
   }
 
-  const credentials =
-    secret !== undefined ||
-    basicUsername !== undefined ||
-    basicPassword !== undefined ||
-    auth !== undefined
-      ? {
-          auth: auth ?? existing.auth,
-          apiKeyHeader: apiKeyHeader ?? existing.apiKeyHeader,
-          apiKeyQueryParam: apiKeyQueryParam ?? existing.apiKeyQueryParam,
-          secret,
-          basicUsername,
-          basicPassword,
-        }
-      : undefined;
-
-  const connection = await updateConnection(
-    id,
-    {
-      ...(name !== undefined ? { name } : {}),
-      ...(baseUrl !== undefined ? { baseUrl } : {}),
-      ...(auth !== undefined ? { auth } : {}),
-      ...(apiKeyHeader !== undefined ? { apiKeyHeader } : {}),
-      ...(apiKeyQueryParam !== undefined ? { apiKeyQueryParam } : {}),
-    },
-    credentials,
+  const credentialPatch = {
+    secret: data.secret,
+    basicUsername: data.basicUsername,
+    basicPassword: data.basicPassword,
+    oauth2ClientSecret: data.oauth2ClientSecret,
+    oauth2AccessToken: data.oauth2AccessToken,
+    oauth2RefreshToken: data.oauth2RefreshToken,
+    oauth2ExpiresAt: data.oauth2ExpiresAt,
+    oauth2TokenType: data.oauth2TokenType,
+  };
+  const hasCredentialPatch = Object.values(credentialPatch).some(
+    (value) => value !== undefined,
   );
+
+  if (hasCredentialPatch) {
+    await mergeConnectionCredentials(id, {
+      auth: data.auth ?? existing.auth,
+      apiKeyHeader: data.apiKeyHeader ?? existing.apiKeyHeader,
+      apiKeyQueryParam: data.apiKeyQueryParam ?? existing.apiKeyQueryParam,
+      ...credentialPatch,
+    });
+  }
+
+  const connection = await updateConnection(id, {
+    ...(data.name !== undefined ? { name: data.name } : {}),
+    ...(data.baseUrl !== undefined ? { baseUrl: data.baseUrl } : {}),
+    ...(data.auth !== undefined ? { auth: data.auth } : {}),
+    ...(data.apiKeyHeader !== undefined ? { apiKeyHeader: data.apiKeyHeader } : {}),
+    ...(data.apiKeyQueryParam !== undefined
+      ? { apiKeyQueryParam: data.apiKeyQueryParam }
+      : {}),
+    ...(data.oauth2AuthorizationUrl !== undefined
+      ? { oauth2AuthorizationUrl: data.oauth2AuthorizationUrl }
+      : {}),
+    ...(data.oauth2TokenUrl !== undefined ? { oauth2TokenUrl: data.oauth2TokenUrl } : {}),
+    ...(data.oauth2ClientId !== undefined ? { oauth2ClientId: data.oauth2ClientId } : {}),
+    ...(data.oauth2Scopes !== undefined ? { oauth2Scopes: data.oauth2Scopes } : {}),
+    ...(data.oauth2UsePkce !== undefined ? { oauth2UsePkce: data.oauth2UsePkce } : {}),
+    ...(data.oauth2TokenDelivery !== undefined
+      ? { oauth2TokenDelivery: data.oauth2TokenDelivery }
+      : {}),
+    ...(data.oauth2QueryParam !== undefined
+      ? { oauth2QueryParam: data.oauth2QueryParam }
+      : {}),
+  });
 
   return NextResponse.json({ connection });
 }

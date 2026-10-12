@@ -34,6 +34,8 @@ export function requiredSecretFields(auth: AuthKind): Array<
     case "apiKeyQuery":
     case "bearer":
       return ["secret"];
+    case "oauth2":
+      return [];
     default:
       return [];
   }
@@ -56,6 +58,8 @@ export function describeAuth(connection: {
       return `API key in ?${resolveApiKeyQueryParam(connection.apiKeyQueryParam)} query parameter`;
     case "basic":
       return "Basic auth";
+    case "oauth2":
+      return "OAuth 2.0 (authorization code + PKCE)";
     default:
       return "No authentication";
   }
