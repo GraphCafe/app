@@ -4,6 +4,7 @@ import type { ApiConnection } from "./types";
 
 const base: ApiConnection = {
   id: "c1",
+  userId: "user-1",
   name: "Test",
   baseUrl: "https://api.example.com",
   auth: "apiKeyQuery",
