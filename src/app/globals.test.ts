@@ -57,6 +57,14 @@ describe("design tokens", () => {
     expect(block(css, /:root:not\(\.light\)\s*\{/)).toMatchObject(dark);
   });
 
+  it("keeps the explicit .dark block in exact parity with the OS-dark block", () => {
+    const explicit = block(css, /^\.dark\s*\{/);
+    const osDark = block(css, /:root:not\(\.light\)\s*\{/);
+    // Guard the comparison itself: two empty blocks would also be "equal".
+    expect(Object.keys(explicit).length).toBeGreaterThan(30);
+    expect(explicit).toEqual(osDark);
+  });
+
   it("drops the default shadcn grays", () => {
     expect(css).not.toMatch(/oklch\(0\.\d+ 0 0\)/);
   });

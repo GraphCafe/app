@@ -34,4 +34,29 @@ describe("ThemeToggle", () => {
     render(<ThemeToggle />);
     expect(screen.getByRole("button", { name: /theme: dark/i })).toBeTruthy();
   });
+
+  it("applies another tab's choice on a storage event, not only the label", () => {
+    render(<ThemeToggle />);
+    expect(document.documentElement.className).toBe("");
+
+    localStorage.setItem(THEME_STORAGE_KEY, "dark");
+    fireEvent(window, new StorageEvent("storage", { key: THEME_STORAGE_KEY, newValue: "dark" }));
+
+    expect(screen.getByRole("button", { name: /theme: dark/i })).toBeTruthy();
+    expect(document.documentElement.classList.contains("dark")).toBe(true);
+
+    localStorage.setItem(THEME_STORAGE_KEY, "system");
+    fireEvent(window, new StorageEvent("storage", { key: THEME_STORAGE_KEY, newValue: "system" }));
+
+    expect(screen.getByRole("button", { name: /theme: system/i })).toBeTruthy();
+    expect(document.documentElement.className).toBe("");
+  });
+
+  it("ignores storage events that touch a different key", () => {
+    render(<ThemeToggle />);
+    localStorage.setItem(THEME_STORAGE_KEY, "dark");
+    fireEvent(window, new StorageEvent("storage", { key: "some-other-key", newValue: "x" }));
+    expect(document.documentElement.className).toBe("");
+    expect(screen.getByRole("button", { name: /theme: system/i })).toBeTruthy();
+  });
 });

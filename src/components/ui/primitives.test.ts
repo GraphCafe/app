@@ -52,4 +52,15 @@ describe("global foundations", () => {
     expect(css).toMatch(/svg\.lucide\s*\{[^}]*stroke-width:\s*1\.5px/);
     expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)/);
   });
+
+  it("draws the pencil rule on the cells, because a table row is no containing block", () => {
+    // WebKit bug 240961: an absolutely positioned pseudo-element on a <tr> escapes to the
+    // nearest positioned ancestor, which leaves Safari with no row dividers at all.
+    expect(css).toMatch(
+      /\.pencil-rule\s*>\s*td,\s*\.pencil-rule\s*>\s*th\s*\{[^}]*position:\s*relative/,
+    );
+    expect(css).toMatch(/\.pencil-rule\s*>\s*td::after[^{]*\{[^}]*mask-image:/);
+    expect(css).toMatch(/-webkit-mask-image:/);
+    expect(css).not.toMatch(/\.pencil-rule::after/);
+  });
 });

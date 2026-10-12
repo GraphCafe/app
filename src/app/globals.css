@@ -222,21 +222,37 @@
   }
 }
 
-/* Faint pencil hairline under table rows (spec §5). */
-.pencil-rule {
+/* Faint pencil hairline under table rows (spec §5).
+   Drawn on the cells rather than on the <tr>: WebKit does not make a table row a
+   containing block for an absolutely positioned pseudo-element (bugs.webkit.org
+   240961, reproduced on Safari 15 through 18.3 and fixed only in WebKit trunk on
+   2026-04-11). A row-level rule escapes to the nearest positioned ancestor — the
+   `relative` table container — so Safari loses every divider and stacks the strokes
+   at the bottom edge. Table cells are positioned correctly in every engine. */
+.pencil-rule > td,
+.pencil-rule > th {
   position: relative;
 }
-.pencil-rule::after {
+.pencil-rule > td::after,
+.pencil-rule > th::after {
+  --pencil-rule-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 4' preserveAspectRatio='none'%3E%3Cpath d='M0.5 2.2 C25 1.4 55 2.6 99.5 1.6' fill='none' stroke='black' stroke-width='1' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
   content: "";
   position: absolute;
   inset: auto 0 -1px 0;
   height: 3px;
   pointer-events: none;
   background-color: color-mix(in srgb, var(--foreground) 35%, transparent);
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 4' preserveAspectRatio='none'%3E%3Cpath d='M0.5 2.2 C25 1.4 55 2.6 99.5 1.6' fill='none' stroke='black' stroke-width='1' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E")
-    center / 100% 100% no-repeat;
+  -webkit-mask-image: var(--pencil-rule-image);
+  -webkit-mask-position: center;
+  -webkit-mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-image: var(--pencil-rule-image);
+  mask-position: center;
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
 }
-.pencil-rule:last-child::after {
+.pencil-rule:last-child > td::after,
+.pencil-rule:last-child > th::after {
   display: none;
 }
 

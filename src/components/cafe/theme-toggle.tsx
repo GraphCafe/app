@@ -22,11 +22,21 @@ function readPref(): ThemePref {
 }
 
 function subscribe(onChange: () => void) {
-  window.addEventListener(CHANGE_EVENT, onChange);
-  window.addEventListener("storage", onChange);
+  /** Re-read the stored preference and put it on <html>, so another tab's choice repaints. */
+  const sync = () => {
+    applyThemePref(readPref());
+    onChange();
+  };
+  const onStorage = (event: StorageEvent) => {
+    // A clear() (key null) can also drop the override.
+    if (event.key !== null && event.key !== THEME_STORAGE_KEY) return;
+    sync();
+  };
+  window.addEventListener(CHANGE_EVENT, sync);
+  window.addEventListener("storage", onStorage);
   return () => {
-    window.removeEventListener(CHANGE_EVENT, onChange);
-    window.removeEventListener("storage", onChange);
+    window.removeEventListener(CHANGE_EVENT, sync);
+    window.removeEventListener("storage", onStorage);
   };
 }
 

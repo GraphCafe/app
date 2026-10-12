@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   Background,
   BackgroundVariant,
@@ -17,6 +18,8 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { AlertCircle, Loader2, Menu } from "lucide-react";
+import { GraphCafeMark } from "@/components/brand/graph-cafe-mark";
+import { ThemeToggle } from "@/components/cafe/theme-toggle";
 import { CafeNode } from "@/components/graph/cafe-node";
 import { TemplateMenu } from "@/components/graph/template-menu";
 import { Button } from "@/components/ui/button";
@@ -162,7 +165,13 @@ function GraphStudioInner() {
                 </div>
               </SheetContent>
             </Sheet>
-            <h1 className="font-heading text-xl text-foreground">Graph.Cafe</h1>
+            <h1 className="sr-only">Idea graph</h1>
+            <Link href="/" className="flex items-center gap-2 text-foreground">
+              <GraphCafeMark size={32} />
+              <span className="font-heading text-[21px] font-medium leading-none">
+                Graph.Cafe
+              </span>
+            </Link>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button
@@ -181,6 +190,7 @@ function GraphStudioInner() {
             >
               Clear
             </Button>
+            <ThemeToggle />
           </div>
         </header>
 

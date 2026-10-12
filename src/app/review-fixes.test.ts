@@ -33,6 +33,26 @@ describe("final review fixes", () => {
     }
   });
 
+  it("keeps the template menu flat on the page and its mood badge readable", () => {
+    const menu = read("src/components/graph/template-menu.tsx");
+    expect(menu).not.toMatch(/shadow-\[var\(--shadow-popover\)\]/);
+    expect(menu).not.toMatch(/text-\[\d{1,2}px\]/);
+    expect(menu).toMatch(/text-xs/);
+  });
+
+  it("gives the graph page the shared lockup and the theme switch", () => {
+    const studio = read("src/components/graph/graph-studio.tsx");
+    expect(studio).toMatch(
+      /import \{ GraphCafeMark \} from "@\/components\/brand\/graph-cafe-mark"/,
+    );
+    expect(studio).toMatch(
+      /import \{ ThemeToggle \} from "@\/components\/cafe\/theme-toggle"/,
+    );
+    expect(studio).toMatch(/<GraphCafeMark size=\{32\}/);
+    expect(studio).toMatch(/<ThemeToggle \/>/);
+    expect(studio).toMatch(/href="\/"/);
+  });
+
   it("drops subtitles that restate the page title", () => {
     const restating = [
       ["src/app/explore/[datasetId]/page.tsx", "Execute the roast and preview JSON + table."],

@@ -22,7 +22,7 @@ export function TemplateMenu({
   return (
     <Card
       className={cn(
-        "flex h-full flex-col border-border bg-muted/95 shadow-[var(--shadow-popover)] backdrop-blur-sm",
+        "flex h-full flex-col border-border bg-muted/95 backdrop-blur-sm",
         className,
       )}
     >
@@ -54,7 +54,7 @@ export function TemplateMenu({
                       </span>
                       <Badge
                         variant="secondary"
-                        className="shrink-0 bg-border/60 text-[10px] text-muted-foreground"
+                        className="shrink-0 bg-border/60 text-xs text-muted-foreground"
                       >
                         {template.mood}
                       </Badge>
