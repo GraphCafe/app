@@ -14,17 +14,22 @@ export type ResolvedOAuth2Config = {
   queryParam: string;
 };
 
-export function resolveOAuth2UsePkce(connection: ApiConnection): boolean {
+type OAuth2DeliveryFields = Pick<
+  ApiConnection,
+  "oauth2UsePkce" | "oauth2TokenDelivery" | "oauth2QueryParam"
+>;
+
+export function resolveOAuth2UsePkce(connection: OAuth2DeliveryFields): boolean {
   return connection.oauth2UsePkce !== false;
 }
 
 export function resolveOAuth2TokenDelivery(
-  connection: ApiConnection,
+  connection: OAuth2DeliveryFields,
 ): OAuth2TokenDelivery {
   return connection.oauth2TokenDelivery ?? "authorizationHeader";
 }
 
-export function resolveOAuth2QueryParam(connection: ApiConnection): string {
+export function resolveOAuth2QueryParam(connection: OAuth2DeliveryFields): string {
   const trimmed = connection.oauth2QueryParam?.trim();
   return trimmed ? trimmed : DEFAULT_OAUTH2_QUERY_PARAM;
 }
