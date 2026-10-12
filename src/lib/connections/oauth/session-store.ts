@@ -10,6 +10,7 @@ const SESSION_TTL_MS = 15 * 60 * 1000;
 export type OAuthPendingSession = {
   /** OAuth2 `state` parameter. */
   id: string;
+  userId: string;
   connectionId: string;
   codeVerifier: string;
   usePkce: boolean;
@@ -47,6 +48,7 @@ function prune(store: StoreFile): OAuthPendingSession[] {
 }
 
 export async function createOAuthSession(input: {
+  userId: string;
   connectionId: string;
   codeVerifier: string;
   usePkce: boolean;
@@ -56,6 +58,7 @@ export async function createOAuthSession(input: {
   const store = await readStore();
   const session: OAuthPendingSession = {
     id: randomUUID(),
+    userId: input.userId,
     connectionId: input.connectionId,
     codeVerifier: input.codeVerifier,
     usePkce: input.usePkce,

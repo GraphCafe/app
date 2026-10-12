@@ -7,7 +7,9 @@ export type StoreFileName =
   | "secrets.json"
   | "datasets.json"
   | "reports.json"
-  | "oauth-sessions.json";
+  | "oauth-sessions.json"
+  | "users.json"
+  | "user-sessions.json";
 
 /** Fixed paths under `.data/graph-cafe/` (Turbopack-safe; no dynamic join segments). */
 const STATIC_STORE_PATHS: Record<StoreFileName, string> = {
@@ -16,6 +18,8 @@ const STATIC_STORE_PATHS: Record<StoreFileName, string> = {
   "datasets.json": path.join(STORE_ROOT, "datasets.json"),
   "reports.json": path.join(STORE_ROOT, "reports.json"),
   "oauth-sessions.json": path.join(STORE_ROOT, "oauth-sessions.json"),
+  "users.json": path.join(STORE_ROOT, "users.json"),
+  "user-sessions.json": path.join(STORE_ROOT, "user-sessions.json"),
 };
 
 export function graphCafeDataDir(): string {

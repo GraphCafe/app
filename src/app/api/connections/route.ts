@@ -1,20 +1,29 @@
 import { NextResponse } from "next/server";
+import { connectionCreateSchema } from "@/lib/connections/schemas";
 import {
-  connectionCreateSchema,
-} from "@/lib/connections/schemas";
+  isAuthError,
+  requireRequestUser,
+} from "@/lib/auth/require-user";
 import {
+  claimLegacyOrphansForUser,
   createConnection,
   ensureDemoSeed,
   listConnections,
 } from "@/lib/connections/persistence";
 
 export async function GET() {
-  await ensureDemoSeed();
-  const items = await listConnections();
+  const auth = await requireRequestUser();
+  if (isAuthError(auth)) return auth;
+  await claimLegacyOrphansForUser(auth.id);
+  await ensureDemoSeed(auth.id);
+  const items = await listConnections(auth.id);
   return NextResponse.json({ connections: items });
 }
 
 export async function POST(request: Request) {
+  const auth = await requireRequestUser();
+  if (isAuthError(auth)) return auth;
+
   const body = await request.json();
   const parsed = connectionCreateSchema.safeParse(body);
   if (!parsed.success) {
@@ -26,7 +35,7 @@ export async function POST(request: Request) {
   const {
     name,
     baseUrl,
-    auth,
+    auth: authKind,
     apiKeyHeader,
     apiKeyQueryParam,
     oauth2AuthorizationUrl,
@@ -48,9 +57,10 @@ export async function POST(request: Request) {
 
   const connection = await createConnection(
     {
+      userId: auth.id,
       name,
       baseUrl,
-      auth,
+      auth: authKind,
       apiKeyHeader,
       apiKeyQueryParam,
       oauth2AuthorizationUrl,
@@ -62,7 +72,7 @@ export async function POST(request: Request) {
       oauth2QueryParam,
     },
     {
-      auth,
+      auth: authKind,
       apiKeyHeader,
       apiKeyQueryParam,
       secret,

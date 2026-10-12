@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { connectionDiscoverSchema } from "@/lib/connections/schemas";
 import { discoverEndpoint } from "@/lib/connections/discovery";
 import {
+  isAuthError,
+  requireRequestUser,
+} from "@/lib/auth/require-user";
+import {
   getConnection,
   getConnectionCredentials,
 } from "@/lib/connections/persistence";
@@ -14,6 +18,9 @@ import type { ConnectionCredentials } from "@/lib/connections/schemas";
  * request only unless `connectionId` is set, in which case stored credentials are merged in.
  */
 export async function POST(request: Request) {
+  const auth = await requireRequestUser();
+  if (isAuthError(auth)) return auth;
+
   let body: unknown;
   try {
     body = await request.json();
@@ -41,9 +48,9 @@ export async function POST(request: Request) {
     baseUrl,
   } = parsed.data;
 
-  let auth = requestedAuth;
+  let authKind = requestedAuth;
   let credentials: ConnectionCredentials = {
-    auth,
+    auth: authKind,
     apiKeyHeader,
     apiKeyQueryParam,
     secret,
@@ -52,12 +59,12 @@ export async function POST(request: Request) {
   };
 
   if (connectionId) {
-    const connection = await getConnection(connectionId);
+    const connection = await getConnection(connectionId, auth.id);
     if (!connection) {
       return NextResponse.json({ error: "Connection not found." }, { status: 404 });
     }
     const stored = await getConnectionCredentials(connectionId);
-    auth = connection.auth;
+    authKind = connection.auth;
     credentials = {
       auth: connection.auth,
       apiKeyHeader: connection.apiKeyHeader ?? stored?.apiKeyHeader,
@@ -76,7 +83,7 @@ export async function POST(request: Request) {
   try {
     const result = await discoverEndpoint({
       url,
-      auth,
+      auth: authKind,
       baseUrl,
       credentials,
     });

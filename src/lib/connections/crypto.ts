@@ -29,3 +29,12 @@ export function decryptSecret(payload: string): string {
     "utf8",
   );
 }
+
+/** Returns undefined when ciphertext cannot be decrypted (for example after a key rotation). */
+export function tryDecryptSecret(payload: string): string | undefined {
+  try {
+    return decryptSecret(payload);
+  } catch {
+    return undefined;
+  }
+}

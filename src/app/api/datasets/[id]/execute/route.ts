@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import {
+  isAuthError,
+  requireRequestUser,
+} from "@/lib/auth/require-user";
+import {
   getConnection,
   getConnectionCredentials,
   getDataset,
@@ -9,12 +13,15 @@ import { executeProxyRequest } from "@/lib/connections/proxy";
 type Params = { params: Promise<{ id: string }> };
 
 export async function POST(_request: Request, { params }: Params) {
+  const auth = await requireRequestUser();
+  if (isAuthError(auth)) return auth;
+
   const { id } = await params;
-  const dataset = await getDataset(id);
+  const dataset = await getDataset(id, auth.id);
   if (!dataset) {
     return NextResponse.json({ error: "Dataset not found." }, { status: 404 });
   }
-  const connection = await getConnection(dataset.connectionId);
+  const connection = await getConnection(dataset.connectionId, auth.id);
   if (!connection) {
     return NextResponse.json({ error: "Connection not found." }, { status: 404 });
   }
