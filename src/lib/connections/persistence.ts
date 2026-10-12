@@ -1,7 +1,12 @@
-import { mkdir, readFile, writeFile } from "fs/promises";
-import path from "path";
+import { readFile, writeFile } from "fs/promises";
 import { randomUUID } from "crypto";
 import { decryptSecret, encryptSecret } from "./crypto";
+import {
+  ensureGraphCafeDataDir,
+  graphCafeDataDir,
+  storeFilePath,
+  type StoreFileName,
+} from "./storage-paths";
 import type {
   ApiConnection,
   DatasetDefinition,
@@ -10,13 +15,7 @@ import type {
 import { GRAPH_CAFE_REPORT_VERSION } from "./types";
 import type { ConnectionCredentials } from "./schemas";
 
-export function graphCafeDataDir(): string {
-  const override = process.env.GRAPH_CAFE_DATA_DIR?.trim();
-  if (override) return path.resolve(override);
-  return path.join(process.cwd(), ".data", "graph-cafe");
-}
-
-const DATA_DIR = graphCafeDataDir();
+export { graphCafeDataDir };
 
 type StoreFile<T> = { items: T[] };
 
@@ -25,23 +24,19 @@ type SecretRecord = {
   payload: string;
 };
 
-async function ensureDir() {
-  await mkdir(DATA_DIR, { recursive: true });
-}
-
-async function readJson<T>(file: string, fallback: T): Promise<T> {
-  await ensureDir();
+async function readJson<T>(file: StoreFileName, fallback: T): Promise<T> {
+  await ensureGraphCafeDataDir();
   try {
-    const raw = await readFile(path.join(DATA_DIR, file), "utf8");
+    const raw = await readFile(storeFilePath(file), "utf8");
     return JSON.parse(raw) as T;
   } catch {
     return fallback;
   }
 }
 
-async function writeJson<T>(file: string, data: T): Promise<void> {
-  await ensureDir();
-  await writeFile(path.join(DATA_DIR, file), JSON.stringify(data, null, 2));
+async function writeJson<T>(file: StoreFileName, data: T): Promise<void> {
+  await ensureGraphCafeDataDir();
+  await writeFile(storeFilePath(file), JSON.stringify(data, null, 2));
 }
 
 function credentialsToPlain(creds: ConnectionCredentials): string {
@@ -165,13 +160,11 @@ export async function mergeConnectionCredentials(
     (await getConnectionCredentials(connectionId)) ??
     ({ auth: connection.auth } satisfies ConnectionCredentials);
 
-  const next: ConnectionCredentials = { ...existing };
-  for (const [key, value] of Object.entries(patch) as Array<
-    [keyof ConnectionCredentials, ConnectionCredentials[keyof ConnectionCredentials]]
-  >) {
-    if (value !== undefined) next[key] = value;
-  }
-  next.auth = connection.auth;
+  const next: ConnectionCredentials = {
+    ...existing,
+    ...patch,
+    auth: connection.auth,
+  };
   await saveConnectionCredentials(connectionId, next);
   return next;
 }

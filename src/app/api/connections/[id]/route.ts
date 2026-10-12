@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { connectionUpdateSchema } from "@/lib/connections/schemas";
+import { connectionHasStoredCredential } from "@/lib/connections/credential-status";
 import {
   deleteConnection,
   getConnection,
+  getConnectionCredentials,
   mergeConnectionCredentials,
   updateConnection,
 } from "@/lib/connections/persistence";
@@ -15,7 +17,13 @@ export async function GET(_request: Request, { params }: Params) {
   if (!connection) {
     return NextResponse.json({ error: "Connection not found." }, { status: 404 });
   }
-  return NextResponse.json({ connection });
+  const credentials = await getConnectionCredentials(id);
+  return NextResponse.json({
+    connection,
+    credentialStatus: {
+      hasCredential: connectionHasStoredCredential(connection, credentials),
+    },
+  });
 }
 
 export async function PATCH(request: Request, { params }: Params) {
