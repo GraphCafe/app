@@ -2,6 +2,7 @@
   "name": "Graph.Cafe",
   "install": "npm ci",
   "start": "bash .cursor/start-dev.sh",
+  "repositoryDependencies": ["github.com/GraphCafe/app"],
   "ports": [
     {
       "port": 43127
